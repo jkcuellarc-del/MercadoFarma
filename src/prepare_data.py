@@ -139,7 +139,7 @@ def main():
 
     # H2 2026 de variables exogenas (supuesto, el usuario las elige en el simulador):
     #   IPC: inflacion mensual de 2025 repetida mes a mes; macro anual: valor 2026;
-    #   precios: H2 2025 * (H1 2026 / H1 2025); poblacion perros/gatos: valor 2026.
+    #   precios y poblacion perros/gatos: valor de junio 2026.
     me = me.sort_values(["Especie", "Fecha"]).reset_index(drop=True)
     infl25 = nac.loc["2025-07-01":"2025-12-01", "Inflación Mensual"].to_numpy()
     ipc = nac.loc[LAST_REAL, "IPC"]
@@ -156,15 +156,10 @@ def main():
         for esp, g in me.groupby("Especie"):
             if g[c].notna().sum() == 0:
                 continue
-            if c in ("Perros", "Gatos"):
-                v = g.loc[g.Fecha == LAST_REAL, c].iloc[0]
-                me.loc[(me.Especie == esp) & (me.Fecha > LAST_REAL), c] = v
-            else:
-                k = (g.loc[g.Fecha.between("2026-01-01", LAST_REAL), c].sum()
-                     / g.loc[g.Fecha.between("2025-01-01", "2025-06-01"), c].sum())
-                for f in pd.date_range("2026-07-01", periods=6, freq="MS"):
-                    prev = g.loc[g.Fecha == f - pd.DateOffset(years=1), c].iloc[0]
-                    me.loc[(me.Especie == esp) & (me.Fecha == f), c] = prev * k
+            # precios y poblacion: se mantiene el valor de junio 2026 (no hay estacionalidad
+            # consistente en los precios de 2023-2025)
+            v = g.loc[g.Fecha == LAST_REAL, c].iloc[0]
+            me.loc[(me.Especie == esp) & (me.Fecha > LAST_REAL), c] = v
     me.to_csv(OUT / "monthly_especie.csv", index=False)
 
     # anual por especie
