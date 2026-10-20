@@ -23,7 +23,7 @@ PROC, MODELS, REP = ROOT / "data" / "processed", ROOT / "models", ROOT / "report
 ESPECIES = ["CA", "Cattle", "Poultry", "Swine"]
 PRECIOS = {"var_leche": "Precio Leche", "var_res": "Precio Carne Res", "var_cerdo": "Precio carne cerdo",
            "var_huevo": "Precio huevo", "var_pollo": "Precio Pollo"}
-ALPHA = {"mercado": 100, "lab": 10}  # elegidos en validacion (ver reports/comparacion_modelos.csv)
+ALPHA = {"mercado": 100, "lab": 50}  # elegidos en validacion (ver reports/comparacion_modelos.csv)
 SPLITS = ["train", "validacion", "prueba"]
 
 
