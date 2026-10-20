@@ -15,7 +15,9 @@ Variables explicativas (todas calculadas con informacion hasta t):
   smmlv           promedio de los ultimos 12 meses (ya vienen como % de crecimiento)
   var_<precio>    cambio del precio promedio de 12 meses vs. el promedio 12 meses antes
                   (leche, res, cerdo, huevo, pollo); 0 si la especie no lo usa
-  var_perros/gatos  crecimiento anual de la poblacion (solo CA; 0 en las demas)
+  ipc_yoy_CA      ipc_yoy x (especie == CA): pendiente propia de animales de companía
+                  ante la inflacion (los hogares priorizan gastos esenciales sobre la
+                  salud de la mascota). Perros y gatos no se usan como variables.
   esp_*           especie en one-hot
   y_mercado       (solo modelo del laboratorio) crecimiento del mercado de la especie
 
@@ -40,7 +42,7 @@ MODELS.mkdir(exist_ok=True)
 PRECIOS = {"var_leche": "Precio Leche", "var_res": "Precio Carne Res", "var_cerdo": "Precio carne cerdo",
            "var_huevo": "Precio huevo", "var_pollo": "Precio Pollo"}
 ESPECIES = ["CA", "Cattle", "Poultry", "Swine"]
-CONT = ["ipc_yoy", "pib", "pib_agro", "smmlv"] + list(PRECIOS) + ["var_perros", "var_gatos"]
+CONT = ["ipc_yoy", "ipc_yoy_CA", "pib", "pib_agro", "smmlv"] + list(PRECIOS)
 ONEHOT = [f"esp_{e}" for e in ESPECIES]
 
 
@@ -66,8 +68,7 @@ def features(m):
         f["smmlv"] = g["Porc Crec SMMLV"].rolling(12).mean()
         for k, c in PRECIOS.items():
             f[k] = yoy12(g[c]) if g[c].notna().any() else 0.0
-        for k, c in (("var_perros", "Perros"), ("var_gatos", "Gatos")):
-            f[k] = g[c] / g[c].shift(12) - 1 if g[c].notna().any() else 0.0
+        f["ipc_yoy_CA"] = f["ipc_yoy"] if esp == "CA" else 0.0
         f["Estimado"] = g["Estimado"].astype(int).rolling(12).max().astype(bool)
         out.append(f.reset_index())
     return pd.concat(out, ignore_index=True)
