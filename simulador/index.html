@@ -1,0 +1,826 @@
+<title>Simulador Mercado Animal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: panel de controles a la izquierda, resultados y gráficos a la derecha; una columna en móvil. */
+:root{
+  --bg:#f2f5f4; --card:#ffffff; --ink:#13201c; --ink2:#4a5a55; --ink3:#6f7f7a; --line:#dbe3e0; --grid:#e8eeec;
+  --accent:#0d6b5b; --accent-ink:#ffffff; --track:#dfe7e4;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --pos:#2a78d6; --neg:#eb6834;
+  --reg-bg:#fdecd9; --reg-fg:#8a4a00; --est-bg:#e4edf8; --est-fg:#1d4f91; --opt-bg:#dcf1e6; --opt-fg:#0f6b3f;
+  --warn-bg:#fff3d6; --warn-fg:#7a5200;
+  --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-d:'IBM Plex Sans Condensed','IBM Plex Sans',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1514; --card:#172120; --ink:#e7f0ed; --ink2:#a9bbb5; --ink3:#8a9c96; --line:#2a3836; --grid:#223130;
+    --accent:#4fc3a8; --accent-ink:#06211b; --track:#2a3836;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --pos:#3987e5; --neg:#d95926;
+    --reg-bg:#3b2a12; --reg-fg:#f3c88a; --est-bg:#16283f; --est-fg:#9cc2f2; --opt-bg:#123626; --opt-fg:#8fddb4;
+    --warn-bg:#3a2e0e; --warn-fg:#f1d58a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1514; --card:#172120; --ink:#e7f0ed; --ink2:#a9bbb5; --ink3:#8a9c96; --line:#2a3836; --grid:#223130;
+  --accent:#4fc3a8; --accent-ink:#06211b; --track:#2a3836;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --pos:#3987e5; --neg:#d95926;
+  --reg-bg:#3b2a12; --reg-fg:#f3c88a; --est-bg:#16283f; --est-fg:#9cc2f2; --opt-bg:#123626; --opt-fg:#8fddb4;
+  --warn-bg:#3a2e0e; --warn-fg:#f1d58a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:20px}
+header h1{font-family:var(--font-d);font-weight:600;font-size:28px;letter-spacing:-.01em;margin:0 0 4px;text-wrap:balance}
+header p{margin:0;color:var(--ink2);max-width:70ch}
+.layout{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.controls{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+@media (max-width:900px){.controls{position:static;max-height:none}}
+h2{font-family:var(--font-d);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin:0 0 10px}
+h3{font-size:14px;font-weight:600;margin:14px 0 6px}
+.ctl{display:grid;gap:4px;margin:0 0 12px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctl label{font-size:14px;font-weight:500}
+.ctl .base{font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.ctl .in{display:flex;align-items:center;gap:10px}
+.ctl input[type=number]{width:78px;font:inherit;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 6px;text-align:right}
+.ctl input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.unit{font-size:12px;color:var(--ink3);width:18px}
+.warn{background:var(--warn-bg);color:var(--warn-fg);border-radius:6px;padding:5px 8px;font-size:12px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:7px 14px;background:var(--card)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.note{font-size:12.5px;color:var(--ink3)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.card.total{border-color:var(--accent);grid-column:1/-1}
+.card .name{font-family:var(--font-d);font-weight:600;font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.sw{width:10px;height:10px;border-radius:2px;flex:none}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card.total .metrics{max-width:520px}
+.m .k{font-size:12px;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em}
+.m .v{font-family:var(--font-d);font-size:34px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.m .d,.m .b{font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;border-radius:99px;padding:2px 9px;margin:4px 0}
+.pill.regular{background:var(--reg-bg);color:var(--reg-fg)}
+.pill.estable{background:var(--est-bg);color:var(--est-fg)}
+.pill.optimista{background:var(--opt-bg);color:var(--opt-fg)}
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink2);margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.chartbox{position:relative}
+svg{display:block;width:100%;height:auto}
+svg text{fill:var(--ink2);font-family:var(--font);font-size:11px;font-variant-numeric:tabular-nums}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;border-radius:6px;font-size:12px;white-space:nowrap;transform:translate(-50%,-110%);z-index:5}
+.torn{display:grid;gap:6px}
+.tr{display:grid;grid-template-columns:minmax(120px,190px) 1fr 62px;gap:8px;align-items:center;font-size:13px}
+.tr .bar{position:relative;height:14px;background:var(--grid);border-radius:3px}
+.tr .bar i{position:absolute;top:0;bottom:0;border-radius:3px}
+.tr .bar::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--ink3)}
+.tr .val{text-align:right;font-variant-numeric:tabular-nums}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+.tw{overflow-x:auto}
+details summary{cursor:pointer;color:var(--ink2);font-size:13px}
+ul.src{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink2)}
+a{color:var(--accent)}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Simulador del mercado de salud animal 2027</h1>
+  <p>Mueve las variables económicas y los precios para ver cómo cambia el crecimiento del mercado farmacéutico de salud animal en Colombia y el del laboratorio, por especie. Crecimiento nominal 2027 frente a 2026.</p>
+</header>
+
+<div class="layout">
+  <aside class="panel controls" aria-label="Variables del simulador">
+    <div class="tools" style="margin-bottom:10px">
+      <h2 style="margin:0">Variables 2027</h2>
+      <button id="reset" type="button">Restablecer base</button>
+    </div>
+    <h3 style="margin-top:4px">Generales · aplican a todas las especies</h3>
+    <div id="gen"></div>
+    <h3>Precios · cambio del promedio 2027 frente a 2026</h3>
+    <div id="pre"></div>
+    <p class="note">Animales de compañía no tiene precios propios: responde a las variables generales. La inflación es la de diciembre a diciembre; el crecimiento mostrado es nominal, así que sube con el IPC.</p>
+  </aside>
+
+  <main style="display:grid;gap:16px;min-width:0">
+    <div class="tools">
+      <div class="seg" role="group" aria-label="Ver">
+        <button type="button" id="vMer" aria-pressed="true">Mercado</button>
+        <button type="button" id="vLab" aria-pressed="false">Laboratorio</button>
+      </div>
+      <span class="note">Escenarios: regular &lt; 8% · estable 8% a 15% · optimista &gt; 15%</span>
+    </div>
+
+    <section aria-label="Resultados" class="cards" id="cards"></section>
+
+    <section class="panel" aria-label="Historia y proyección">
+      <h2 id="chTitle">Crecimiento anual del mercado por especie</h2>
+      <div class="legend" id="legend"></div>
+      <div class="chartbox" id="chartbox"><svg id="chart" viewBox="0 0 680 320" role="img" aria-label="Crecimiento anual por especie 2022 a 2027"></svg><div class="tip" id="tip" hidden></div></div>
+      <p class="note">Línea continua: crecimiento observado (2026 incluye julio a diciembre estimado con un modelo estacional). Línea punteada y marca hueca: proyección 2027 con su margen de error típico.</p>
+      <details><summary>Ver como tabla</summary><div class="tw" id="tbl"></div></details>
+    </section>
+
+    <section class="panel" aria-label="Sensibilidad">
+      <h2 id="seTitle">Qué mueve más el crecimiento total del mercado</h2>
+      <div class="torn" id="torn"></div>
+      <p class="note">Cambio en puntos porcentuales del crecimiento total al mover cada variable desde los valores actuales de los controles: +1 punto en las variables económicas y +10% en cada precio.</p>
+    </section>
+
+    <section class="panel" aria-label="Sobre el modelo">
+      <h2>Sobre el modelo</h2>
+      <p class="note" style="font-size:13.5px;color:var(--ink2)">Cada especie tiene su propia regresión Ridge, entrenada con ventas mensuales de 2020 a junio de 2026 (crecimiento de 12 meses móviles). El modelo del laboratorio usa además el crecimiento proyectado del mercado. Con solo cinco años de historia, los efectos de cada variable son pequeños y aproximados: úsalo para ver la dirección y el orden de magnitud, no cifras exactas. El margen de error es el error absoluto medio en validación (2025) y prueba (enero a junio de 2026). Aves tuvo un error mucho mayor en la prueba por la caída del mercado en 2026. El laboratorio en Bovinos es la proyección menos confiable.</p>
+      <h3>Valores base de 2027</h3>
+      <ul class="src">
+        <li>Inflación 5,1%: encuesta de analistas del Banco de la República (diciembre de 2027). El equipo técnico del Banco proyecta 4,3% y el Gobierno 4,8%.</li>
+        <li>PIB 2,3%: BBVA Research. El consenso de analistas va de 1,8% a 2,6%.</li>
+        <li>PIB agropecuario 2,7% (promedio 2020-2025) y salario mínimo 11,9% (promedio de aumentos 2022-2025): no hay pronóstico público, son supuestos.</li>
+        <li>Precios: se mantienen en su nivel de junio de 2026 durante 2027, lo que equivale al cambio mostrado frente al promedio de 2026. Es un supuesto neutral porque los precios no mostraron estacionalidad consistente.</li>
+      </ul>
+    </section>
+  </main>
+</div>
+</div>
+
+<script>
+const M = {
+ "especies": [
+  "CA",
+  "Cattle",
+  "Poultry",
+  "Swine"
+ ],
+ "base": {
+  "CA": {
+   "ipc_yoy": 0.051,
+   "pib": 2.3,
+   "pib_agro": 2.72,
+   "smmlv": 0.11909250000000002,
+   "var_leche": 0.0,
+   "var_res": 0.0,
+   "var_cerdo": 0.0,
+   "var_huevo": 0.0,
+   "var_pollo": 0.0
+  },
+  "Cattle": {
+   "ipc_yoy": 0.051,
+   "pib": 2.3,
+   "pib_agro": 2.72,
+   "smmlv": 0.11909250000000002,
+   "var_leche": -0.0019771991081570794,
+   "var_res": 0.01105515184237782,
+   "var_cerdo": 0.0,
+   "var_huevo": 0.0,
+   "var_pollo": 0.0
+  },
+  "Poultry": {
+   "ipc_yoy": 0.051,
+   "pib": 2.3,
+   "pib_agro": 2.72,
+   "smmlv": 0.11909250000000002,
+   "var_leche": 0.0,
+   "var_res": 0.0,
+   "var_cerdo": 0.0,
+   "var_huevo": 0.021513353115726996,
+   "var_pollo": -0.0017511067388096269
+  },
+  "Swine": {
+   "ipc_yoy": 0.051,
+   "pib": 2.3,
+   "pib_agro": 2.72,
+   "smmlv": 0.11909250000000002,
+   "var_leche": 0.0,
+   "var_res": 0.0,
+   "var_cerdo": -0.0740780407696976,
+   "var_huevo": 0.0,
+   "var_pollo": 0.0
+  }
+ },
+ "modelos": {
+  "mercado": {
+   "mean": {
+    "ipc_yoy": 0.07737440418290313,
+    "ipc_yoy_CA": 0.019343601045725786,
+    "pib": 4.787837837837838,
+    "pib_agro": 1.8121621621621622,
+    "smmlv": 0.11189581081081082,
+    "var_leche": 0.055555965970848845,
+    "var_res": 0.03602583792133701,
+    "var_cerdo": 0.03699457948679902,
+    "var_huevo": 0.04400457936778687,
+    "var_pollo": 0.03852794200393425
+   },
+   "scale": {
+    "ipc_yoy": 0.023382230757215877,
+    "ipc_yoy_CA": 0.035485305170514375,
+    "pib": 3.542144162085265,
+    "pib_agro": 2.760031930247495,
+    "smmlv": 0.03660929951756671,
+    "var_leche": 0.12638801049162213,
+    "var_res": 0.09865334453447662,
+    "var_cerdo": 0.08536264456333771,
+    "var_huevo": 0.10856923977386167,
+    "var_pollo": 0.08501270088999235
+   },
+   "features": [
+    "ipc_yoy",
+    "pib",
+    "pib_agro",
+    "smmlv",
+    "var_leche",
+    "var_res",
+    "var_cerdo",
+    "var_huevo",
+    "var_pollo"
+   ],
+   "especies": {
+    "CA": {
+     "intercept": 0.18981823945674448,
+     "coef": {
+      "ipc_yoy": 0.006732871853638784,
+      "pib": 0.01413886097661279,
+      "pib_agro": -0.004903556079166854,
+      "smmlv": -0.011368536078752522,
+      "var_leche": 2.0783573471470643e-34,
+      "var_res": 5.975782017149341e-34,
+      "var_cerdo": -4.156714694294129e-34,
+      "var_huevo": 2.0783573471470643e-34,
+      "var_pollo": -4.156714694294128e-34
+     }
+    },
+    "Cattle": {
+     "intercept": 0.14518308718023532,
+     "coef": {
+      "ipc_yoy": -0.0047550410320926755,
+      "pib": 0.0015808997875309083,
+      "pib_agro": -0.0036334201183896406,
+      "smmlv": -0.002117436051107708,
+      "var_leche": -0.002726900408650317,
+      "var_res": 0.005543952045799688,
+      "var_cerdo": 9.314706714705044e-34,
+      "var_huevo": -4.657353357352522e-34,
+      "var_pollo": 9.314706714705044e-34
+     }
+    },
+    "Poultry": {
+     "intercept": 0.09676881384736905,
+     "coef": {
+      "ipc_yoy": 0.009004664050411525,
+      "pib": -0.0020308930760032417,
+      "pib_agro": 0.0030817012142486167,
+      "smmlv": 0.0005657730849268344,
+      "var_leche": 3.0066626347707114e-34,
+      "var_res": 5.60841578944878e-34,
+      "var_cerdo": -6.013325269541423e-34,
+      "var_huevo": 0.007159951484056237,
+      "var_pollo": 0.0016388922983153749
+     }
+    },
+    "Swine": {
+     "intercept": 0.18482247572266133,
+     "coef": {
+      "ipc_yoy": -0.01060409511063264,
+      "pib": -0.005973747379409303,
+      "pib_agro": 0.0033393945961364916,
+      "smmlv": 0.0013882665651690645,
+      "var_leche": -5.35246388675355e-34,
+      "var_res": -1.9028985025642885e-33,
+      "var_cerdo": -0.007998863232521984,
+      "var_huevo": -5.352463886753549e-34,
+      "var_pollo": 1.0704927773507101e-33
+     }
+    }
+   }
+  },
+  "lab": {
+   "mean": {
+    "ipc_yoy": 0.05159976917698052,
+    "ipc_yoy_CA": 0.01289994229424513,
+    "pib": 1.15,
+    "pib_agro": 4.950000000000001,
+    "smmlv": 0.14034499999999997,
+    "var_leche": 0.012545298256270977,
+    "var_res": -0.002547672009533629,
+    "var_cerdo": 0.0055413850309963715,
+    "var_huevo": -0.0038925969356531577,
+    "var_pollo": 0.01327880109656268,
+    "y_mercado": 0.14662656486787007
+   },
+   "scale": {
+    "ipc_yoy": 0.0098309857691521,
+    "ipc_yoy_CA": 0.02287766604972808,
+    "pib": 0.34298526045427796,
+    "pib_agro": 1.9643701280563193,
+    "smmlv": 0.012257045989506969,
+    "var_leche": 0.05295592346593425,
+    "var_res": 0.006374355497870347,
+    "var_cerdo": 0.02290000720235748,
+    "var_huevo": 0.035896337156756254,
+    "var_pollo": 0.02381828734487295,
+    "y_mercado": 0.05634202713501839
+   },
+   "features": [
+    "ipc_yoy",
+    "pib",
+    "pib_agro",
+    "smmlv",
+    "var_leche",
+    "var_res",
+    "var_cerdo",
+    "var_huevo",
+    "var_pollo",
+    "y_mercado"
+   ],
+   "especies": {
+    "CA": {
+     "intercept": 0.19966028273345518,
+     "coef": {
+      "ipc_yoy": 0.0023705260862137345,
+      "pib": -0.0015883117379408664,
+      "pib_agro": -0.004890830102287053,
+      "smmlv": -0.007501296211288054,
+      "var_leche": 1.0233070268226309e-33,
+      "var_res": -3.062975714727659e-33,
+      "var_cerdo": -1.0233070268226309e-33,
+      "var_huevo": 1.0233070268226309e-33,
+      "var_pollo": 0.0,
+      "y_mercado": 0.005589122155683561
+     }
+    },
+    "Cattle": {
+     "intercept": 0.016684515160096752,
+     "coef": {
+      "ipc_yoy": 0.0007529221236622469,
+      "pib": -0.0010062280803149076,
+      "pib_agro": 0.0012531454273232358,
+      "smmlv": -0.005392205458068316,
+      "var_leche": -0.0021105886114844213,
+      "var_res": 0.003673319446918298,
+      "var_cerdo": -1.292098108075787e-34,
+      "var_huevo": 1.292098108075787e-34,
+      "var_pollo": 0.0,
+      "y_mercado": 0.0018913366126342948
+     }
+    },
+    "Poultry": {
+     "intercept": 0.15090104826393752,
+     "coef": {
+      "ipc_yoy": 0.005989661911454474,
+      "pib": -0.003834767594743049,
+      "pib_agro": -0.008684520884964166,
+      "smmlv": 0.0051446814338309875,
+      "var_leche": 2.9775850791619758e-34,
+      "var_res": -7.273960377928078e-34,
+      "var_cerdo": -2.9775850791619758e-34,
+      "var_huevo": 0.01448006643118441,
+      "var_pollo": 0.0029799284527537813,
+      "y_mercado": -0.0012759136877454331
+     }
+    },
+    "Swine": {
+     "intercept": 0.28716262734482656,
+     "coef": {
+      "ipc_yoy": 0.0007040392220617927,
+      "pib": -0.0025344699789789323,
+      "pib_agro": -0.001748494330220269,
+      "smmlv": -0.004913091188899824,
+      "var_leche": -2.3737214417372795e-33,
+      "var_res": 7.318728817875658e-33,
+      "var_cerdo": 0.007689441068618936,
+      "var_huevo": -2.3737214417372795e-33,
+      "var_pollo": 0.0,
+      "y_mercado": 0.010392067497285912
+     }
+    }
+   }
+  }
+ },
+ "rangos": {
+  "CA": {
+   "ipc_yoy": [
+    0.0346549192364169,
+    0.1119732924298475
+   ],
+   "pib": [
+    0.6,
+    10.6
+   ],
+   "pib_agro": [
+    -1.9,
+    8.1
+   ],
+   "smmlv": [
+    0.035,
+    0.1625
+   ],
+   "var_leche": [
+    0.0,
+    0.0
+   ],
+   "var_res": [
+    0.0,
+    0.0
+   ],
+   "var_cerdo": [
+    0.0,
+    0.0
+   ],
+   "var_huevo": [
+    0.0,
+    0.0
+   ],
+   "var_pollo": [
+    0.0,
+    0.0
+   ]
+  },
+  "Cattle": {
+   "ipc_yoy": [
+    0.0346549192364169,
+    0.1119732924298475
+   ],
+   "pib": [
+    0.6,
+    10.6
+   ],
+   "pib_agro": [
+    -1.9,
+    8.1
+   ],
+   "smmlv": [
+    0.035,
+    0.1625
+   ],
+   "var_leche": [
+    -0.086320103717954,
+    0.4366912480868237
+   ],
+   "var_res": [
+    -0.0203298325530389,
+    0.378839938765096
+   ],
+   "var_cerdo": [
+    0.0,
+    0.0
+   ],
+   "var_huevo": [
+    0.0,
+    0.0
+   ],
+   "var_pollo": [
+    0.0,
+    0.0
+   ]
+  },
+  "Poultry": {
+   "ipc_yoy": [
+    0.0346549192364169,
+    0.1119732924298475
+   ],
+   "pib": [
+    0.6,
+    10.6
+   ],
+   "pib_agro": [
+    -1.9,
+    8.1
+   ],
+   "smmlv": [
+    0.035,
+    0.1625
+   ],
+   "var_leche": [
+    0.0,
+    0.0
+   ],
+   "var_res": [
+    0.0,
+    0.0
+   ],
+   "var_cerdo": [
+    0.0,
+    0.0
+   ],
+   "var_huevo": [
+    -0.1286287831995057,
+    0.3646833013435699
+   ],
+   "var_pollo": [
+    0.0115256795583036,
+    0.3535466672640315
+   ]
+  },
+  "Swine": {
+   "ipc_yoy": [
+    0.0346549192364169,
+    0.1119732924298475
+   ],
+   "pib": [
+    0.6,
+    10.6
+   ],
+   "pib_agro": [
+    -1.9,
+    8.1
+   ],
+   "smmlv": [
+    0.035,
+    0.1625
+   ],
+   "var_leche": [
+    0.0,
+    0.0
+   ],
+   "var_res": [
+    0.0,
+    0.0
+   ],
+   "var_cerdo": [
+    -0.2037421689168815,
+    0.3763339801115692
+   ],
+   "var_huevo": [
+    0.0,
+    0.0
+   ],
+   "var_pollo": [
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "pesos": {
+  "mercado": {
+   "CA": 0.30426939932335595,
+   "Cattle": 0.49403366986000197,
+   "Poultry": 0.0827199675190471,
+   "Swine": 0.1189769632975949
+  },
+  "lab": {
+   "CA": 0.25821568705271347,
+   "Cattle": 0.15149680963536402,
+   "Poultry": 0.05480613032682048,
+   "Swine": 0.5354813729851019
+  }
+ },
+ "historia": {
+  "mercado": {
+   "CA": {
+    "2022": 0.2373376971204164,
+    "2023": 0.1663483448734917,
+    "2024": 0.136988622381764,
+    "2025": 0.1015911073478679,
+    "2026": 0.2245575167540368
+   },
+   "Cattle": {
+    "2022": 0.153939194329115,
+    "2023": 0.1300104402620128,
+    "2024": 0.1238469049458674,
+    "2025": 0.1759652719424764,
+    "2026": 0.2199018807624977
+   },
+   "Poultry": {
+    "2022": 0.1127124977268272,
+    "2023": 0.1162211898682221,
+    "2024": 0.105361808534413,
+    "2025": 0.0842907425122121,
+    "2026": -0.1837548555732665
+   },
+   "Swine": {
+    "2022": 0.1173380832898649,
+    "2023": 0.2174264391849523,
+    "2024": 0.1594372217072026,
+    "2025": 0.2635612401516685,
+    "2026": 0.1399549629821384
+   },
+   "Total": {
+    "2022": 0.16761443801201814,
+    "2023": 0.14782268882746696,
+    "2024": 0.12926551254766028,
+    "2025": 0.15169110861304547,
+    "2026": 0.1639233842888601
+   }
+  },
+  "lab": {
+   "CA": {
+    "2022": null,
+    "2023": 0.1477338775887497,
+    "2024": 0.1880991796231985,
+    "2025": 0.2098686110257213,
+    "2026": 0.1785701481410999
+   },
+   "Cattle": {
+    "2022": null,
+    "2023": 0.0278029478459469,
+    "2024": 0.0078814458531615,
+    "2025": 0.0646371117230004,
+    "2026": 0.1409513323490365
+   },
+   "Poultry": {
+    "2022": null,
+    "2023": 0.2617852264390994,
+    "2024": 0.0607531670130512,
+    "2025": 0.0643455879739178,
+    "2026": 0.231955013774366
+   },
+   "Swine": {
+    "2022": null,
+    "2023": 0.2915732057949065,
+    "2024": 0.2467642796950742,
+    "2025": 0.2087981577283644,
+    "2026": 0.3419836345562737
+   },
+   "Total": {
+    "2022": null,
+    "2023": 0.1857554872703715,
+    "2024": 0.16778932317125084,
+    "2025": 0.1736446639008744,
+    "2026": 0.2572561427980409
+   }
+  }
+ },
+ "error_pp": {
+  "CA": {
+   "mercado_validacion": 6.779143972728397,
+   "lab_validacion": 4.778248277283872,
+   "mercado_prueba": 5.320096120905215,
+   "lab_prueba": 6.656445660406103
+  },
+  "Cattle": {
+   "mercado_validacion": 5.101209816356054,
+   "lab_validacion": 4.485031149385927,
+   "mercado_prueba": 7.9539077161132,
+   "lab_prueba": 3.9323187366295698
+  },
+  "Poultry": {
+   "mercado_validacion": 2.597520680220873,
+   "lab_validacion": 2.3920984424021774,
+   "mercado_prueba": 12.930319325366668,
+   "lab_prueba": 2.4721469501609863
+  },
+  "Swine": {
+   "mercado_validacion": 5.448247365088791,
+   "lab_validacion": 4.970069704614648,
+   "mercado_prueba": 4.997045600875947,
+   "lab_prueba": 6.840378340901382
+  }
+ }
+};
+const ESP = M.especies;
+const NAME = {CA:'Animales de compañía', Cattle:'Bovinos', Poultry:'Aves', Swine:'Cerdos', Total:'Total'};
+const COLOR = {CA:'var(--s1)', Cattle:'var(--s2)', Poultry:'var(--s3)', Swine:'var(--s4)'};
+const PR = {var_res:['Cattle','Carne de res'], var_leche:['Cattle','Leche'], var_cerdo:['Swine','Carne de cerdo'], var_huevo:['Poultry','Huevo'], var_pollo:['Poultry','Pollo']};
+const GEN = [
+  {k:'ipc', label:'Inflación 2027 (IPC, dic a dic)', unit:'%', min:0, max:12, step:.1, r:'ipc_yoy', f:100},
+  {k:'pib', label:'Crecimiento del PIB', unit:'%', min:-3, max:8, step:.1, r:'pib', f:1},
+  {k:'agro', label:'Crecimiento del PIB agropecuario', unit:'%', min:-5, max:10, step:.1, r:'pib_agro', f:1},
+  {k:'smmlv', label:'Aumento del salario mínimo', unit:'%', min:0, max:25, step:.1, r:'smmlv', f:100},
+];
+const fmt = (v,d=1)=> v.toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pc = v => fmt(v*100)+'%';
+const sg = (v,d=1)=> (v>=0?'+':'−')+fmt(Math.abs(v),d);
+
+const baseState = (()=>{ const b=M.base.CA, s={ipc:b.ipc_yoy*100,pib:b.pib,agro:b.pib_agro,smmlv:b.smmlv*100};
+  for(const k in PR) s[k]=M.base[PR[k][0]][k]*100; for(const k in s) s[k]=Math.round(s[k]*10)/10; return s;})();
+let S = {...baseState}, view='mercado';
+
+function raw(s,e){ const r={ipc_yoy:s.ipc/100,pib:s.pib,pib_agro:s.agro,smmlv:s.smmlv/100};
+  for(const k in PR) r[k]= PR[k][0]===e ? s[k]/100 : 0; return r; }
+function predict(s){
+  const out={};
+  for(const e of ESP){
+    const r=raw(s,e), mm=M.modelos.mercado, ml=M.modelos.lab;
+    const em=mm.especies[e]; let g=em.intercept;
+    for(const f of mm.features) g+=em.coef[f]*((r[f]-mm.mean[f])/mm.scale[f]);
+    const el=ml.especies[e]; let l=el.intercept;
+    for(const f of ml.features){ const x = f==='y_mercado' ? g : r[f]; l+=el.coef[f]*((x-ml.mean[f])/ml.scale[f]); }
+    out[e]={mercado:g, lab:l};
+  }
+  for(const k of ['mercado','lab']){ out.Total=out.Total||{}; out.Total[k]=ESP.reduce((a,e)=>a+M.pesos[k][e]*out[e][k],0); }
+  return out;
+}
+const band = (e,k)=>{ const f=x=>{const v=M.error_pp[x]; return (v[k+'_validacion']+v[k+'_prueba'])/2/100;};
+  return e==='Total' ? ESP.reduce((a,x)=>a+M.pesos[k][x]*f(x),0) : f(e); };
+const scen = v => v<.08?['regular','▼ Regular']:v<.15?['estable','● Estable']:['optimista','▲ Optimista'];
+
+/* ---------- controles ---------- */
+function ctl(host,id,label,unit,min,max,step,baseTxt){
+  const d=document.createElement('div'); d.className='ctl';
+  d.innerHTML=`<div class="row"><label for="n_${id}">${label}</label><span class="base">Base: ${baseTxt}</span></div>
+  <div class="in"><input type="range" id="r_${id}" min="${min}" max="${max}" step="${step}" aria-label="${label}">
+  <input type="number" id="n_${id}" step="${step}" inputmode="decimal"><span class="unit">${unit}</span></div><div id="w_${id}" hidden class="warn"></div>`;
+  host.appendChild(d);
+  const r=d.querySelector('#r_'+id), n=d.querySelector('#n_'+id);
+  r.addEventListener('input',()=>{S[id]=+r.value;n.value=S[id];update();});
+  n.addEventListener('input',()=>{const v=parseFloat(n.value.replace(',','.')); if(!isNaN(v)){S[id]=v;r.value=v;update();}});
+}
+GEN.forEach(g=>ctl(document.getElementById('gen'),g.k,g.label,g.unit,g.min,g.max,g.step,fmt(baseState[g.k])+'%'));
+const preHost=document.getElementById('pre');
+for(const sp of ['Cattle','Swine','Poultry']){
+  const h=document.createElement('h3'); h.style.cssText='font-size:13px;color:var(--ink2);margin:10px 0 6px;display:flex;gap:8px;align-items:center';
+  h.innerHTML=`<span class="sw" style="background:${COLOR[sp]}"></span>${NAME[sp]}`; preHost.appendChild(h);
+  for(const k in PR) if(PR[k][0]===sp) ctl(preHost,k,'Precio '+PR[k][1].toLowerCase().replace('carne de ','carne de '),'%',-30,30,.5,sg(baseState[k])+'%');
+}
+function syncControls(){
+  for(const k in S){ const r=document.getElementById('r_'+k), n=document.getElementById('n_'+k); if(r){r.value=S[k]; if(document.activeElement!==n) n.value=S[k];} }
+  // avisos de extrapolación
+  const R=M.rangos;
+  const chk=(id,v,[a,b],fac,unit)=>{ const w=document.getElementById('w_'+id); const lo=a*fac, hi=b*fac;
+    if(v<lo-2||v>hi+2){w.hidden=false;w.textContent=`Fuera del rango visto en 2021-2026 (${fmt(lo)}${unit} a ${fmt(hi)}${unit}): el resultado es una extrapolación.`;} else w.hidden=true; };
+  GEN.forEach(g=>chk(g.k,S[g.k],R.CA[g.r],g.f,'%'));
+  for(const k in PR) chk(k,S[k],R[PR[k][0]][k],100,'%');
+}
+
+/* ---------- resultados ---------- */
+const cardsEl=document.getElementById('cards');
+function renderCards(p,pb){
+  const order=['Total',...ESP];
+  cardsEl.innerHTML=order.map(e=>{
+    const sw = e==='Total' ? '' : `<span class="sw" style="background:${COLOR[e]}"></span>`;
+    const one=(k,lbl)=>{ const v=p[e][k], d=(v-pb[e][k])*100, [c,t]=scen(v), b=band(e,k)*100;
+      const delta = Math.abs(d)<.05 ? 'igual a la base' : `${sg(d)} pts vs. base`;
+      return `<div class="m"><div class="k">${lbl}</div><div class="v">${pc(v)}</div><span class="pill ${c}">${t}</span>
+      <div class="b">± ${fmt(b,1)} pts de error típico</div><div class="d">${delta}</div></div>`; };
+    return `<article class="card ${e==='Total'?'total':''}"><h3 class="name">${sw}${NAME[e]}${e==='Total'?' · ponderado por ventas 2026':''}</h3>
+      <div class="metrics">${one('mercado','Mercado')}${one('lab','Laboratorio')}</div></article>`; }).join('');
+}
+
+/* ---------- gráfico ---------- */
+const YEARS=[2022,2023,2024,2025,2026,2027];
+function renderChart(p){
+  const k=view, svg=document.getElementById('chart'), W=680,H=320,L=44,Rm=104,T=14,B=30;
+  const hist=e=>YEARS.slice(0,5).map(y=>M.historia[k][e][y]);
+  const ser=ESP.map(e=>({e, h:hist(e), p:p[e][k], b:band(e,k)}));
+  let lo=Math.min(0,...ser.flatMap(s=>[...s.h.filter(v=>v!=null),s.p-s.b])), hi=Math.max(.2,...ser.flatMap(s=>[...s.h.filter(v=>v!=null),s.p+s.b]));
+  lo=Math.floor(lo/.1)*.1; hi=Math.ceil(hi/.1)*.1;
+  const x=i=>L+(W-L-Rm)*i/(YEARS.length-1), y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  let s='';
+  const step=(hi-lo)>.6?.2:.1;
+  for(let v=Math.ceil(lo/step)*step; v<=hi+1e-9; v+=step) s+=`<line x1="${L}" x2="${W-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${Math.round(v*100)}%</text>`;
+  for(const th of [.08,.15]) if(th>lo&&th<hi) s+=`<line x1="${L}" x2="${W-Rm}" y1="${y(th)}" y2="${y(th)}" stroke="var(--ink3)" stroke-dasharray="2 4"/><text x="${L+4}" y="${y(th)-4}" style="font-size:10px">${th*100}%</text>`;
+  YEARS.forEach((yr,i)=>s+=`<text x="${x(i)}" y="${H-10}" text-anchor="middle">${yr===2027?'2027 proy.':yr}</text>`);
+  // etiquetas finales sin choque
+  const ends=ser.map(o=>({e:o.e,y:y(o.p)})).sort((a,b)=>a.y-b.y); for(let i=1;i<ends.length;i++) if(ends[i].y-ends[i-1].y<13) ends[i].y=ends[i-1].y+13;
+  const hits=[];
+  ser.forEach(o=>{
+    const c=COLOR[o.e]; const pts=o.h.map((v,i)=>v==null?null:[x(i),y(v),v,YEARS[i]]).filter(Boolean);
+    s+=`<polyline fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round" points="${pts.map(q=>q[0]+','+q[1]).join(' ')}"/>`;
+    const last=pts[pts.length-1], px=x(5), py=y(o.p);
+    s+=`<line x1="${last[0]}" y1="${last[1]}" x2="${px}" y2="${py}" stroke="${c}" stroke-width="2" stroke-dasharray="5 4"/>`;
+    s+=`<line x1="${px}" x2="${px}" y1="${y(o.p+o.b)}" y2="${y(o.p-o.b)}" stroke="${c}" stroke-width="1.5" opacity=".55"/>`;
+    s+=pts.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="3" fill="${c}" stroke="var(--card)" stroke-width="2"/>`).join('');
+    s+=`<circle cx="${px}" cy="${py}" r="5" fill="var(--card)" stroke="${c}" stroke-width="2"/>`;
+    const ly=ends.find(z=>z.e===o.e).y;
+    s+=`<text x="${px+12}" y="${ly+4}" style="fill:var(--ink);font-weight:500">${NAME[o.e].replace('Animales de compañía','Compañía')} ${pc(o.p)}</text>`;
+    pts.forEach(q=>hits.push([q[0],q[1],`${NAME[o.e]} ${q[3]}: ${pc(q[2])}`]));
+    hits.push([px,py,`${NAME[o.e]} 2027: ${pc(o.p)} (± ${fmt(o.b*100)} pts)`]);
+  });
+  hits.forEach(h=>s+=`<circle cx="${h[0]}" cy="${h[1]}" r="12" fill="transparent" data-t="${h[2]}" data-x="${h[0]}" data-y="${h[1]}" class="hit"/>`);
+  svg.innerHTML=s;
+  const box=document.getElementById('chartbox'), tip=document.getElementById('tip');
+  svg.querySelectorAll('.hit').forEach(c=>{
+    c.addEventListener('pointerenter',()=>{const r=svg.getBoundingClientRect(),b=box.getBoundingClientRect(),sc=r.width/W;
+      tip.textContent=c.dataset.t; tip.style.left=(r.left-b.left+ +c.dataset.x*sc)+'px'; tip.style.top=(r.top-b.top+ +c.dataset.y*sc)+'px'; tip.hidden=false;});
+    c.addEventListener('pointerleave',()=>tip.hidden=true);
+  });
+  document.getElementById('legend').innerHTML=ESP.map(e=>`<span><span class="sw" style="background:${COLOR[e]}"></span>${NAME[e]}</span>`).join('');
+  // tabla
+  const rows=ESP.map(e=>`<tr><td>${NAME[e]}</td>${YEARS.slice(0,5).map((_,i)=>`<td>${M.historia[k][e][YEARS[i]]==null?'–':pc(M.historia[k][e][YEARS[i]])}</td>`).join('')}<td><b>${pc(p[e][k])}</b></td><td>± ${fmt(band(e,k)*100)}</td></tr>`).join('');
+  document.getElementById('tbl').innerHTML=`<table><thead><tr><th>Especie</th>${YEARS.slice(0,5).map(y=>`<th>${y}</th>`).join('')}<th>2027 proy.</th><th>Error típico (pts)</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ---------- sensibilidad ---------- */
+function renderTornado(p){
+  const k=view, base=p.Total[k]*100, items=[];
+  GEN.forEach(g=>{ const t={...S}; t[g.k]+=1; items.push([`${g.label.replace(' 2027 (IPC, dic a dic)','').replace('Crecimiento del ','').replace('Aumento del ','').replace(/^./,c=>c.toUpperCase())} +1 pt`, (predict(t).Total[k]*100-base)]); });
+  for(const q in PR){ const t={...S}; t[q]+=10; items.push([`Precio ${PR[q][1].toLowerCase()} +10% (${NAME[PR[q][0]].toLowerCase()})`, (predict(t).Total[k]*100-base)]); }
+  items.sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const mx=Math.max(.3,...items.map(i=>Math.abs(i[1])));
+  document.getElementById('torn').innerHTML=items.map(([n,d])=>{ const w=Math.abs(d)/mx*50;
+    return `<div class="tr"><span>${n}</span><div class="bar"><i style="background:${d>=0?'var(--pos)':'var(--neg)'};${d>=0?`left:50%`:`right:50%`};width:${w}%"></i></div><span class="val">${sg(d,2)} pts</span></div>`; }).join('');
+  document.getElementById('seTitle').textContent = `Qué mueve más el crecimiento total ${k==='mercado'?'del mercado':'del laboratorio'}`;
+  document.getElementById('chTitle').textContent = `Crecimiento anual ${k==='mercado'?'del mercado':'del laboratorio'} por especie`;
+}
+
+let pBase=predict(baseState);
+function update(){ syncControls(); const p=predict(S); renderCards(p,pBase); renderChart(p); renderTornado(p); }
+document.getElementById('reset').onclick=()=>{S={...baseState};update();};
+for(const [id,v] of [['vMer','mercado'],['vLab','lab']]) document.getElementById(id).onclick=()=>{view=v;
+  document.getElementById('vMer').setAttribute('aria-pressed',v==='mercado'); document.getElementById('vLab').setAttribute('aria-pressed',v==='lab'); update();};
+update();
+</script>
