@@ -1,3 +1,0 @@
-estatica_ok=True
-canario_identicos=18/18
-accesos_prueba=0

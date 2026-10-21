@@ -23,7 +23,7 @@ TAREAS = ("mercado", "compite", "lab", "lab_ym")
 ARCHIVOS = [f"features_desarrollo_{t}.csv" for t in TAREAS] + ["series_compite.csv"]
 RESULTADOS = [f"{a}_{t}.{e}" for t in TAREAS for a, e in (("seleccion", "json"), ("cv_grid", "csv"), ("comparacion_cv", "csv"), ("oof", "csv"),
               ("umbral", "csv"), ("curva_aprendizaje", "csv"), ("efecto_balance", "csv"), ("sensibilidad_validacion", "csv"),
-              ("curva_boosting", "csv"), ("curva_arboles", "csv"))]
+              ("curva_boosting", "csv"), ("curva_arboles", "csv"))] + ["screening_predictores.csv", "importancia_variables.csv"]
 
 
 def sha(p):
@@ -47,7 +47,7 @@ def canario():
     tmp = Path(tempfile.mkdtemp(prefix="canario_"))
     raw.to_csv(tmp / "fuente_alterada.csv", index=False, encoding="utf-8-sig")
     env = {**os.environ, "MF_FUENTE": str(tmp / "fuente_alterada.csv"), "MF_DATA": str(tmp / "data"), "MF_REP": str(tmp / "rep")}
-    for m in ("sellar_base", "variables", "desarrollo"):
+    for m in ("sellar_base", "variables", "desarrollo", "seleccion_predictores", "importancia"):
         r = subprocess.run([sys.executable, "-m", f"src.v2.{m}"], cwd=C.ROOT, env=env, capture_output=True, text=True)
         assert r.returncode == 0, r.stderr[-500:]
     filas = []
