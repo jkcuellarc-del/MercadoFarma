@@ -51,11 +51,11 @@ def dev(task):
     base["B1_crecimiento_hace_12m"] = dict(p=pb1, folds=mae_pliegues(y, np.nan_to_num(pb1), fold, mask=has_lag))
 
     # --- busqueda de hiperparametros (misma CV) para cada familia, con y sin balance
-    rows, mejores, oofs = [], {}, {}
+    rows, mejores, oofs, r2oof, r2tr = [], {}, {}, {}, {}
     for kind in EST:
         grid = {f"model__est__{k}": v for k, v in GRID[kind].items()}
-        grid["model__balance"] = [False, True]
-        gs = GridSearchCV(pipeline(kind, task), grid, cv=cv, scoring="neg_mean_absolute_error", refit=False, n_jobs=1)
+        grid["model__balance"] = [False] if kind in SIN_PESOS else [False, True]
+        gs = GridSearchCV(pipeline(kind, task), grid, cv=cv, scoring="neg_mean_absolute_error", refit=False, n_jobs=4)
         gs.fit(X, y)
         r = gs.cv_results_
         for j in range(len(r["params"])):
@@ -70,6 +70,8 @@ def dev(task):
                              sd=float(sc.std(ddof=1)), se=float(sc.std(ddof=1) / np.sqrt(len(sc))))
         pipe = pipeline(kind, task, mejores[kind]["balance"], **mejores[kind]["params"])
         oofs[kind], _ = oof(pipe, d, task, cv)
+        r2oof[kind] = r2(y, oofs[kind])
+        r2tr[kind] = r2(y, clone(pipe).fit(X, y).predict(X))
         print(f"  {kind:10s} MAE_cv={sc.mean():5.2f} ± {sc.std(ddof=1):4.2f}  {mejores[kind]['params']} balance={mejores[kind]['balance']}")
     pd.DataFrame(rows).sort_values(["modelo", "MAE_cv"]).to_csv(C.REP / f"cv_grid_{task}.csv", index=False)
 
@@ -77,12 +79,14 @@ def dev(task):
     comp = []
     for k, v in mejores.items():
         comp.append({"modelo": k, "MAE_cv": v["MAE_cv"], "sd": v["sd"], "MAE_oof_global": float(np.abs(oofs[k] - y).mean() * 100),
-                     "MAE_oof_subconjunto_lag": float(np.abs(oofs[k] - y)[has_lag].mean() * 100)})
+                     "MAE_oof_subconjunto_lag": float(np.abs(oofs[k] - y)[has_lag].mean() * 100),
+                     "R2_oof": r2oof[k], "R2_entrenamiento": r2tr[k]})
     for k, v in base.items():
         sub = has_lag if k.startswith("B1") else np.ones(len(d), bool)
         comp.append({"modelo": k, "MAE_cv": float(np.mean(v["folds"])), "sd": float(np.std(v["folds"], ddof=1)),
                      "MAE_oof_global": float(np.abs(np.nan_to_num(v["p"]) - y)[sub].mean() * 100),
-                     "MAE_oof_subconjunto_lag": float(np.abs(np.nan_to_num(v["p"]) - y)[has_lag].mean() * 100)})
+                     "MAE_oof_subconjunto_lag": float(np.abs(np.nan_to_num(v["p"]) - y)[has_lag].mean() * 100),
+                     "R2_oof": r2(y, v["p"]) if not k.startswith("B1") else None, "R2_entrenamiento": None})
     comp = pd.DataFrame(comp)
     comp.to_csv(C.REP / f"comparacion_cv_{task}.csv", index=False)
     print(comp.round(2).to_string(index=False))
@@ -157,14 +161,34 @@ def dev(task):
             cr.append({"alpha": a, "MAE_cv": float(np.abs(po - y).mean() * 100), "MAE_entrenamiento": float(np.abs(m_tr.predict(X) - y).mean() * 100)})
         pd.DataFrame(cr).to_csv(C.REP / f"curva_regularizacion_{task}.csv", index=False)
 
+    # --- curvas: iteraciones del boosting y numero de arboles de bagging / bosque
+    g = mejores["gbm"]
+    ci, n_max = [], 400
+    et, ev = np.zeros(n_max), np.zeros(n_max)
+    for tr_i, te_i in cv:
+        pg = pipeline("gbm", task, g["balance"], **{**g["params"], "n_estimators": n_max}).fit(X.iloc[tr_i], y[tr_i])
+        pre, est = pg.named_steps["pre"], pg.named_steps["model"].est_
+        et += np.array([np.abs(q - y[tr_i]).mean() for q in est.staged_predict(pre.transform(X.iloc[tr_i]))]) * 100 / len(cv)
+        ev += np.array([np.abs(q - y[te_i]).mean() for q in est.staged_predict(pre.transform(X.iloc[te_i]))]) * 100 / len(cv)
+    pd.DataFrame({"iteracion": np.arange(1, n_max + 1), "MAE_entrenamiento": et, "MAE_cv": ev, "elegida": g["params"].get("n_estimators")}
+                 ).to_csv(C.REP / f"curva_boosting_{task}.csv", index=False)
+    ca = []
+    for kind in ("bagging", "rf"):
+        mk = mejores[kind]
+        for n in (10, 25, 50, 100, 200, 400, 800):
+            po, _ = oof(pipeline(kind, task, mk["balance"], **{**mk["params"], "n_estimators": n}), d, task, cv)
+            ca.append({"modelo": kind, "n_arboles": n, "MAE_cv": float(np.abs(po - y).mean() * 100)})
+    pd.DataFrame(ca).to_csv(C.REP / f"curva_arboles_{task}.csv", index=False)
+
     # --- errores por especie en OOF (estabilidad)
     pe = pd.DataFrame({"Especie": d.Especie, "err": np.abs(oofs[final] - y) * 100}).groupby("Especie").err.agg(["mean", "std"]).reset_index()
+    pe["R2"] = [r2(y[(d.Especie == e).to_numpy()], oofs[final][(d.Especie == e).to_numpy()]) for e in pe.Especie]
     pe.to_csv(C.REP / f"oof_por_especie_{task}.csv", index=False)
     pd.DataFrame({"Fecha": d.Fecha, "Especie": d.Especie, "real": y, "oof": oofs[final], "pliegue": fold}).to_csv(C.REP / f"oof_{task}.csv", index=False)
 
     sel = dict(task=task, final=final, nombre=NOMBRES[final], params=mf["params"], balance=mf["balance"], elegibles=elegibles,
                mejores=mejores, MAE_cv_final=mf["MAE_cv"], sd_cv_final=mf["sd"], base_B1=b1, base_B2=b2, supera_lineas_base=supera,
-               m_umbral=m_star, n_pliegues=len(cv), embargo=t["emb"], n_train=len(d))
+               m_umbral=m_star, n_pliegues=len(cv), embargo=t["emb"], n_train=len(d), R2_oof_final=r2oof[final], R2_train_final=r2tr[final])
     (C.REP / f"seleccion_{task}.json").write_text(json.dumps(sel, indent=1, default=float))
     print(f"  umbral recomendado: restar m = {m_star * 100:+.1f} pp antes de clasificar")
     return sel

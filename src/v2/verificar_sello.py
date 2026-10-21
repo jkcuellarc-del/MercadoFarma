@@ -19,9 +19,11 @@ from . import config as C
 from . import datos
 
 PERMITIDOS = {"prueba.py", "datos.py", "sellar_base.py", "verificar_sello.py"}
-ARCHIVOS = ["features_desarrollo_mercado.csv", "features_desarrollo_lab.csv"]
-RESULTADOS = [f"{a}_{t}.{e}" for t in ("mercado", "lab") for a, e in (("seleccion", "json"), ("cv_grid", "csv"), ("comparacion_cv", "csv"),
-              ("oof", "csv"), ("umbral", "csv"), ("curva_aprendizaje", "csv"), ("efecto_balance", "csv"), ("sensibilidad_validacion", "csv"))]
+TAREAS = ("mercado", "compite", "lab", "lab_ym")
+ARCHIVOS = [f"features_desarrollo_{t}.csv" for t in TAREAS] + ["series_compite.csv"]
+RESULTADOS = [f"{a}_{t}.{e}" for t in TAREAS for a, e in (("seleccion", "json"), ("cv_grid", "csv"), ("comparacion_cv", "csv"), ("oof", "csv"),
+              ("umbral", "csv"), ("curva_aprendizaje", "csv"), ("efecto_balance", "csv"), ("sensibilidad_validacion", "csv"),
+              ("curva_boosting", "csv"), ("curva_arboles", "csv"))]
 
 
 def sha(p):

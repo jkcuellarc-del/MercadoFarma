@@ -1,6 +1,6 @@
 validacion,MAE_pp,n_train_medio
-"por bloques, embargo 0 m",4.250096428596281,80.0
-"por bloques, embargo 3 m",5.34680596604514,60.8
-"por bloques, embargo 6 m",6.16620538134304,43.2
+"por bloques, embargo 0 m",4.824217323712856,80.0
+"por bloques, embargo 3 m",5.271663054930342,60.8
+"por bloques, embargo 6 m",5.85700862348062,43.2
 "por bloques, embargo 11 m",,36.0
 estratificada no viable: Cannot have number of splits n_splits=5 greater than the number of groups: 3.,,

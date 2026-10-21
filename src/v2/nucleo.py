@@ -10,9 +10,11 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, RegressorMixin, clone
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import ElasticNet, Ridge
+from sklearn.ensemble import BaggingRegressor, GradientBoostingRegressor, RandomForestRegressor
+from sklearn.linear_model import ElasticNet, LinearRegression, Ridge
 from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import GridSearchCV, StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -26,15 +28,17 @@ ONEHOT = [f"esp_{e}" for e in ESPS]
 CONT_M = ["ipc_yoy", "ipc_yoy_CA", "pib", "pib_agro", "smmlv", "var_leche", "var_res", "var_cerdo", "var_huevo", "var_pollo"]
 TASKS = {
     "mercado": dict(y="y_mercado", cont=CONT_M, ini="2021-12-01", emb=6, holdout=12, sizes=[6, 12, 18, 24, 30, 36]),
-    "lab": dict(y="y_lab", cont=CONT_M + ["y_mercado"], ini="2023-12-01", emb=3, holdout=6, sizes=[4, 8, 12, 16]),
+    "compite": dict(y="y_compite", cont=CONT_M, ini="2021-12-01", emb=6, holdout=12, sizes=[6, 12, 18, 24, 30, 36]),
+    "lab": dict(y="y_lab", cont=CONT_M + ["y_compite"], ini="2023-12-01", emb=3, holdout=6, sizes=[4, 8, 12, 16]),
+    "lab_ym": dict(y="y_lab", cont=CONT_M + ["y_mercado"], ini="2023-12-01", emb=3, holdout=6, sizes=[4, 8, 12, 16]),
 }
 TRAIN_END, TEST_INI, TEST_END = "2025-12-01", "2026-01-01", "2026-06-01"
 BLOCK = 6
-COMPLEJIDAD = {"ridge_esp": 0, "ridge": 1, "enet": 1, "rf": 2, "gbm": 3}
-NOMBRES = {"ridge_esp": "Ridge por especie", "ridge": "Ridge común", "enet": "Elastic Net", "rf": "Random Forest",
-           "gbm": "Gradient Boosting"}
-
-
+# complejidad para la regla de parsimonia (menor es mas simple)
+COMPLEJIDAD = {"ols_esp": 0, "ridge_esp": 0, "enet_esp": 0, "ols": 1, "ridge": 1, "enet": 1, "knn": 2, "bagging": 3, "rf": 3, "gbm": 4}
+NOMBRES = {"ols_esp": "Regresión lineal por especie", "ridge_esp": "Ridge por especie", "enet_esp": "Elastic Net por especie",
+           "ols": "Regresión lineal", "ridge": "Ridge común", "enet": "Elastic Net común", "knn": "K vecinos más cercanos",
+           "bagging": "Bagging de árboles", "rf": "Random Forest", "gbm": "Gradient Boosting"}
 
 
 def clase(y):
@@ -53,17 +57,25 @@ def mes_idx(f):
 
 
 class PerEspecie(BaseEstimator, RegressorMixin):
-    """Un Ridge por especie; la especie se lee de las 4 ultimas columnas (one-hot)."""
+    """Un modelo lineal por especie (base: ols, ridge o enet); la especie se lee de las 4 ultimas columnas (one-hot)."""
 
-    def __init__(self, alpha=1.0):
+    def __init__(self, base="ridge", alpha=1.0, l1_ratio=0.5):
+        self.base = base
         self.alpha = alpha
+        self.l1_ratio = l1_ratio
+
+    def _nuevo(self):
+        if self.base == "ridge":
+            return Ridge(alpha=self.alpha)
+        if self.base == "enet":
+            return ElasticNet(alpha=self.alpha, l1_ratio=self.l1_ratio, max_iter=50000)
+        return LinearRegression()
 
     def fit(self, X, y, sample_weight=None):
         X, y = np.asarray(X), np.asarray(y, dtype=float)
         w = None if sample_weight is None else np.asarray(sample_weight)
         sp = X[:, -4:].argmax(1)
-        self.models_ = {k: Ridge(alpha=self.alpha).fit(X[sp == k][:, :-4], y[sp == k],
-                                                       sample_weight=None if w is None else w[sp == k])
+        self.models_ = {k: self._nuevo().fit(X[sp == k][:, :-4], y[sp == k], sample_weight=None if w is None else w[sp == k])
                         for k in np.unique(sp)}
         self.mean_ = np.average(y, weights=w)
         return self
@@ -101,19 +113,36 @@ class Balanceado(BaseEstimator, RegressorMixin):
 
 
 EST = {
-    "ridge_esp": lambda: PerEspecie(),
+    "ols_esp": lambda: PerEspecie(base="ols"),
+    "ridge_esp": lambda: PerEspecie(base="ridge"),
+    "enet_esp": lambda: PerEspecie(base="enet"),
+    "ols": lambda: LinearRegression(),
     "ridge": lambda: Ridge(),
     "enet": lambda: ElasticNet(max_iter=50000),
+    "knn": lambda: KNeighborsRegressor(),
+    "bagging": lambda: BaggingRegressor(estimator=DecisionTreeRegressor(random_state=SEED), n_estimators=200, random_state=SEED, n_jobs=1),
     "rf": lambda: RandomForestRegressor(n_estimators=300, random_state=SEED, n_jobs=1),
-    "gbm": lambda: GradientBoostingRegressor(n_estimators=100, learning_rate=0.05, subsample=0.8, random_state=SEED),
+    "gbm": lambda: GradientBoostingRegressor(subsample=0.8, random_state=SEED),
 }
+ALPHAS = [0.1, 1, 10, 100, 1000, 10000]
 GRID = {
-    "ridge_esp": {"alpha": [0.1, 1, 10, 100, 1000]},
-    "ridge": {"alpha": [0.1, 1, 10, 100, 1000]},
-    "enet": {"alpha": [0.001, 0.01, 0.1], "l1_ratio": [0.2, 0.5, 0.8]},
-    "rf": {"max_depth": [2, 3, 5], "min_samples_leaf": [3, 5, 10]},
-    "gbm": {"max_depth": [1, 2, 3], "min_samples_leaf": [3, 8]},
+    "ols_esp": {},
+    "ridge_esp": {"alpha": ALPHAS},
+    "enet_esp": {"alpha": [0.001, 0.01, 0.1, 1], "l1_ratio": [0.1, 0.5, 0.9, 1.0]},
+    "ols": {},
+    "ridge": {"alpha": ALPHAS},
+    "enet": {"alpha": [0.001, 0.01, 0.1, 1], "l1_ratio": [0.1, 0.5, 0.9, 1.0]},
+    "knn": {"n_neighbors": [3, 5, 8, 12, 20, 30], "weights": ["uniform", "distance"], "p": [1, 2]},
+    "bagging": {"estimator__max_depth": [2, 3, 5, None], "estimator__min_samples_leaf": [3, 8], "max_samples": [0.5, 0.8, 1.0]},
+    "rf": {"max_depth": [2, 3, 5, 8], "min_samples_leaf": [3, 8], "max_features": [0.5, 1.0]},
+    "gbm": {"n_estimators": [50, 100, 200, 400], "learning_rate": [0.03, 0.1], "max_depth": [1, 2, 3], "min_samples_leaf": [3, 8]},
 }
+SIN_PESOS = {"knn"}  # KNeighborsRegressor no admite sample_weight: la ponderacion por clase no aplica
+
+
+def r2(y, p):
+    y, p = np.asarray(y, float), np.asarray(p, float)
+    return float(1 - ((y - p) ** 2).sum() / ((y - y.mean()) ** 2).sum())
 
 
 def pipeline(kind, task, balance=False, **params):

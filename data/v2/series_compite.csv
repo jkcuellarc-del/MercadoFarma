@@ -1,0 +1,37 @@
+Especie,Segmento,Subgrupo
+CA,Antimicrobiano,BETALACTAMICOS
+CA,Antiparasitarios,ECTO PARASITICIDAS
+CA,Antiparasitarios,ENDO - ECTO PARASITICIDAS
+CA,Biologicos Caninos,COMBINADAS
+CA,Biologicos Caninos,OTROS
+CA,Biologicos Felinos,LEUCEMIA VIRAL
+CA,Biologicos Felinos,TRIPLE
+CA,Other Pharma,OTROS
+CA,Pain,NO ESTEROIDES
+Cattle,Antimicrobiano,BETALACTAMICOS
+Cattle,Antimicrobiano,INTRAMAMARIOS
+Cattle,Antimicrobiano,QUINOLONAS Y FLUOROQUINOLONAS
+Cattle,Antimicrobiano,TETRACICLINAS
+Cattle,Antimicrobiano,TETRACICLINAS L.A.
+Cattle,Antiparasitarios,ENDO - ECTO PARASITICIDAS
+Cattle,Hormonal,REPRODUCTIVAS
+Cattle,Non Pharma,MACRO MINERALES
+Cattle,Vacunas,CLOSTRIDALES
+Cattle,Vacunas,REPRODUCTIVAS
+Cattle,Vacunas,SÍNDROME DIARREA NEONATAL
+Poultry,Vacunas,COMBINADAS INACTIVADAS
+Poultry,Vacunas,COMBINADAS VIVAS
+Poultry,Vacunas,GUMBORO
+Poultry,Vacunas,MYCOPLASMA VIVA
+Poultry,Vacunas,NEW CASTLE
+Poultry,Vacunas,OTROS
+Poultry,Vacunas,RECOMBINANTES/VECTORIZADAS - VECTOR HVT
+Swine,Antimicrobiano,BETALACTAMICOS
+Swine,Antimicrobiano,MACROLIDOS Y LINCOSAMIDAS
+Swine,Vacunas,BORDETELLA - PASTEURELLA
+Swine,Vacunas,CIRCOVIRUS + MYCOPLASMA
+Swine,Vacunas,E COLI
+Swine,Vacunas,INMUNOCASTRACIÓN
+Swine,Vacunas,MYCOPLASMOSIS
+Swine,Vacunas,PARVOVIROSIS
+Swine,Vacunas,PESTE PORCINA
