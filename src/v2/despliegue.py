@@ -39,6 +39,13 @@ def reajustar():
         joblib.dump({"pipeline": pipe, "columnas": columnas(task), "seleccion": sel, "n_filas": len(d)}, C.MODELOS / f"pipeline_final_{task}.joblib")
         out[task] = pipe
         print(task, sel["nombre"], "reajustado con", len(d), "filas")
+        # alternativa informativa: el modelo de menor MAE de CV (si difiere del elegido por la regla)
+        alt = min(sel["mejores"], key=lambda k: sel["mejores"][k]["MAE_cv"])
+        if alt != sel["final"]:
+            ma = sel["mejores"][alt]
+            pa = pipeline(alt, task, ma["balance"], **ma["params"]).fit(d[columnas(task)], d[t["y"]])
+            joblib.dump({"pipeline": pa, "columnas": columnas(task), "clave": alt, "n_filas": len(d)}, C.MODELOS / f"pipeline_alt_{task}.joblib")
+            out[task + "_alt"] = pa
     return out
 
 
