@@ -21,3 +21,6 @@ Rama de trabajo: `claude/nifty-ritchie-baueku`. Simulador (privado): https://cla
 
 ## Regla para no contaminar la prueba
 No ejecutar `python -m src.v2.prueba` otra vez (candado en `reports/v2/prueba_consultada.lock`). Cualquier nueva medición sobre ene-jun 2026 es una consulta adicional y debe declararse.
+
+## Informe v2
+`informe_v2/` contiene el informe reconstruido con el protocolo v2 (node informe_v2/construir_informe_v2.js). `informe/` (v1) queda obsoleto. Pendientes: textos amarillos `[[...]]`.
