@@ -1,29 +1,23 @@
-# Proyección 2027 del mercado de salud animal (Colombia) y del laboratorio
+# Proyección 2027 del mercado de salud animal (Colombia) y del laboratorio: notas de traspaso
 
-Rama de trabajo: `claude/nifty-ritchie-baueku`. Simulador publicado: https://claude.ai/artifact/WpUvY3RBuvs6sNJ4LK84mc
+Rama de trabajo: `claude/nifty-ritchie-baueku`. Simulador (privado): https://claude.ai/artifact/WpUvY3RBuvs6sNJ4LK84mc
 
-## Pipeline (ejecutar en este orden)
-1. `src/prepare_data.py`: limpia la base y completa julio-diciembre 2026 (ensamble estacional de 3 métodos).
-2. `src/build_features.py`: variables de 12 meses móviles, one-hot, escalamiento y partición cronológica.
-3. `src/train_models.py`: compara línea base, Ridge, Elastic Net, Random Forest, Gradient Boosting y Ridge por especie.
-4. `src/lab_busqueda.py`: búsqueda de mejor modelo para el laboratorio (con mercado proyectado como entrada).
-5. `src/final_model.py`: modelo final y escenario base 2027.
-6. `src/export_simulador.py` y `src/build_simulador.py`: generan `simulador/index.html`.
+## Estado actual (v2, con datos de prueba sellados)
+- Datos: `Base Mercado Salud Animal.csv` (nueva, con columna `Compite Laboraorio`) y `TRM.csv`. Se sellan por fecha: desarrollo hasta dic-2025, prueba ene-jun 2026 (`src/v2/sellar_base.py`).
+- Pipeline: `src/v2/` (ver `src/v2/LEEME.md`). Desarrollo: variables, validación cruzada por bloques con purga, 10 modelos, curvas, cribado de predictores, importancia de variables.
+- Predictores finales: inflación, PIB, PIB agro, salario mínimo y precios en términos reales. La TRM no aportó.
+- Verificación del sello (canario con cifras de 2026 alteradas): `reports/v2/verificacion_sello.txt`.
+- Examen de 2026: consulta principal una sola vez (`reports/v2/prueba_resultados.json`) y consulta complementaria posterior, solo informativa (`reports/v2/prueba_complementaria.json`: K vecinos, Random Forest, regresión lineal). Las dos quedan en `reports/v2/accesos_prueba.log`.
+- Resultado: el modelo elegido por la regla (A: Elastic Net en mercado, Ridge por especie en laboratorio) no superó a los métodos sencillos en el examen. Gradient Boosting (B) fue el mejor en validación y examen, pero se incorporó después de ver el examen.
+- Proyección base 2027: mercado 15,4% (A) y 13,7% (B); laboratorio 20,6% (A) y 22,3% (B).
+- Entregables: `resumen/resumen_ejecutivo.md` (349 palabras), `cuaderno/pipeline_completo.ipynb` (modo reducido) y `cuaderno/pipeline_completo_modo_completo_ejecutado.ipynb`, `simulador/index.html` (dos modelos, íconos por especie, logo).
 
-## Decisiones del usuario
-- Poultry −20% en 2026 y la participación alta de Swine son reales. Ventas negativas del laboratorio = devoluciones válidas.
-- Se modela crecimiento nominal (el IPC es una variable del simulador). 2026 H2 se completa con modelo estacional.
-- Precios jul-dic 2026 = valor de junio. Enfoque de 12 meses móviles por especie y mes.
-- Perros y gatos se omiten. IPC con pendiente propia para CA (`ipc_yoy_CA`), solo lo que dice la data.
-- Modelo final: Ridge por especie (mercado alpha 100, laboratorio alpha 50). El simulador solo muestra porcentajes.
-- Variables generales del simulador mueven todas las especies a la vez.
+## Pendientes
+1. **Rehacer el informe** (`informe/`, `.docx`) con el protocolo v2: la versión actual usa el protocolo v1 (base anterior, sin `Compite Laboraorio`, sin TRM, sin precios reales). Debe describir la consulta complementaria del examen en la sección 3.
+2. Completar lo resaltado en amarillo del informe: quién decide, autorización de datos, fechas de consulta de las fuentes, roles del equipo.
+3. Validar con los datos de julio a diciembre de 2026 (la prueba realmente nueva) y revisar el modelo B.
+4. Confirmar con el negocio los costos del error (supuesto 2:1) y las cifras oficiales de inflación, PIB y salario mínimo de 2027.
+5. Revisar con el equipo comercial la proyección del laboratorio en bovinos.
 
-## Valores base 2027
-IPC 5,1% (analistas Banco de la República), PIB 2,3% (BBVA Research), PIB agro 2,7% y SMMLV 11,9% (promedios, sin pronóstico),
-precios en su nivel de junio 2026.
-
-## Pendientes / riesgos
-- Laboratorio en Bovinos 2027 = 3,0% (poco confiable). Margen de error típico: mercado ±5 a 8 pts, laboratorio ±2 a 6 pts.
-- No se pudo abrir las páginas de Porkcolombia ni del DANE desde el entorno: validar con cifras oficiales.
-- `Crec Mercado Año` de la base no coincide con ninguna definición probada; no se usa.
-- El simulador es una foto del modelo: regenerar si hay datos nuevos.
+## Regla para no contaminar la prueba
+No ejecutar `python -m src.v2.prueba` otra vez (candado en `reports/v2/prueba_consultada.lock`). Cualquier nueva medición sobre ene-jun 2026 es una consulta adicional y debe declararse.
