@@ -137,13 +137,13 @@ td.num,th.num{text-align:right}
 
 <section class="banner" aria-label="Cómo leer el simulador">
   <h2>Dos modelos, un rango</h2>
-  <p><b>Modelo A (elegido por la regla de selección):</b> un modelo lineal muy regularizado. En validación cruzada fue el más simple entre los de rendimiento parecido, pero en el examen de enero a junio de 2026 <b>no superó</b> a los métodos sencillos y casi no reacciona a las variables.</p>
+  <p><b>Modelo A (elegido por la regla de selección):</b> un modelo lineal muy regularizado: Elastic Net en el mercado y Ridge por especie en el laboratorio. En validación cruzada fue el más simple entre los de rendimiento parecido, pero en el examen de enero a junio de 2026 <b>no superó</b> a los métodos sencillos y casi no reacciona a las variables.</p>
   <p><b>Modelo B (Gradient Boosting):</b> el de menor error tanto en validación cruzada como en el examen. Se incorporó <b>después de ver el examen</b>, así que su error real puede ser mayor: se validará con los datos de julio a diciembre de 2026.</p>
   <p>Cada resultado se muestra como rango entre ambos. Los efectos de cada variable son pequeños. El modelo B reacciona sobre todo a los precios de las carnes y, como trabaja con precios reales, también a la inflación; el modelo A casi no reacciona a nada.</p>
   <div class="tw"><table class="cmp"><thead>
     <tr><th rowspan="2">Modelo</th><th class="num" colspan="2">Validación cruzada</th><th class="num" colspan="2">Examen de 2026</th></tr>
     <tr><th class="num">Mercado</th><th class="num">Laboratorio</th><th class="num">Mercado</th><th class="num">Laboratorio</th></tr></thead><tbody id="tcomp"></tbody></table></div>
-  <p class="note">Error medio en puntos porcentuales de crecimiento (menor es mejor). El examen se consulta una sola vez: solo se evaluaron en él el modelo A, el modelo B y los métodos sencillos. K vecinos y Random Forest se comparan solo en validación cruzada.</p>
+  <p class="note">Error medio en puntos porcentuales de crecimiento (menor es mejor). El examen se consulta una sola vez: solo se evaluaron en él el modelo A, el modelo B y los métodos sencillos. K vecinos, Random Forest y la regresión lineal se comparan solo en validación cruzada. La regresión lineal sin regularizar se sobreajusta con tan pocos datos (error de 13 puntos en el mercado): por eso los modelos A usan versiones regularizadas, Ridge y Elastic Net.</p>
 </section>
 
 <div class="layout">
@@ -342,7 +342,7 @@ function renderTornado(pa,pb){
 
 /* ---------- comparacion de modelos ---------- */
 (()=>{ const f=x=>x==null?'–':fmt(x,1);
-  document.getElementById('tcomp').innerHTML=M.comparacion.map((r,i)=>`<tr class="${i===4?'sep':''}"><td>${r.nombre}</td><td class="num">${f(r.cv_mercado)}</td><td class="num">${f(r.cv_lab)}</td><td class="num">${f(r.ex_mercado)}</td><td class="num">${f(r.ex_lab)}</td></tr>`).join(''); })();
+  document.getElementById('tcomp').innerHTML=M.comparacion.map((r,i)=>`<tr class="${r.sep?'sep':''}"><td>${r.nombre}</td><td class="num">${f(r.cv_mercado)}</td><td class="num">${f(r.cv_lab)}</td><td class="num">${f(r.ex_mercado)}</td><td class="num">${f(r.ex_lab)}</td></tr>`).join(''); })();
 
 const pBase={A:predict('A',base0),B:predict('B',base0)};
 function update(){ syncControls(); avisos(); const pa=predict('A',S), pb=predict('B',S); renderCards(pa,pb,pBase.A,pBase.B); renderChart(pa,pb); renderTornado(pa,pb); }
