@@ -61,6 +61,9 @@ def construir(df, comp):
         f["smmlv"] = g["Porc Crec SMMLV"].rolling(12).mean()
         for k, c in PRECIOS.items():
             f[k] = yoy12(g[c]) if g[c].notna().any() else 0.0
+        f["ipcm_yoy"] = yoy12(g["IPC"])
+        for k, c in PRECIOS.items():
+            f["real_" + k] = (1 + f[k]) / (1 + f["ipcm_yoy"]) - 1 if g[c].notna().any() else 0.0
         out.append(f.reset_index())
     return pd.concat(out, ignore_index=True)
 

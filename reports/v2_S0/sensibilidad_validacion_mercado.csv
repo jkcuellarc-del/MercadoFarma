@@ -1,0 +1,6 @@
+validacion,MAE_pp,n_train_medio
+"por bloques, embargo 0 m",4.416716897718637,174.22222222222223
+"por bloques, embargo 3 m",4.448234081007447,152.88888888888889
+"por bloques, embargo 6 m",4.461675439374486,132.0
+"por bloques, embargo 11 m",4.403912936764067,101.33333333333333
+"estratificada por clase, grupos por año (sin purga)",4.424217639113948,156.8

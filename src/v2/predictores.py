@@ -35,7 +35,6 @@ def extra(df, comp, trm):
         g = g.set_index("Fecha")
         f = pd.DataFrame(index=g.index)
         f["Especie"] = esp
-        f["ipcm_yoy"] = V.yoy12(g["IPC"])
         f["part_compite"] = g["Mercado_compite"].rolling(12).sum() / g["Mercado"].rolling(12).sum()
         out.append(f.reset_index())
     e = pd.concat(out, ignore_index=True)
@@ -44,9 +43,6 @@ def extra(df, comp, trm):
 
 def ampliar(f, ex):
     d = f.merge(ex, on=["Fecha", "Especie"]).sort_values(["Especie", "Fecha"]).reset_index(drop=True)
-    for k in PRECIOS:
-        aplica = (d.Especie == PRECIO_DE[k])
-        d["real_" + k] = np.where(aplica, (1 + d[k]) / (1 + d["ipcm_yoy"]) - 1, 0.0)
     g = d.groupby("Especie")
     for c in ["ipc_yoy"] + PRECIOS:
         d[c + "_l6"] = g[c].shift(6)

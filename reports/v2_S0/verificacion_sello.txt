@@ -1,0 +1,3 @@
+estatica_ok=True
+canario_identicos=47/47
+accesos_prueba=0

@@ -25,7 +25,9 @@ warnings.filterwarnings("ignore")
 SEED = 0
 ESPS = ["CA", "Cattle", "Poultry", "Swine"]
 ONEHOT = [f"esp_{e}" for e in ESPS]
-CONT_M = ["ipc_yoy", "ipc_yoy_CA", "pib", "pib_agro", "smmlv", "var_leche", "var_res", "var_cerdo", "var_huevo", "var_pollo"]
+# Predictores adoptados tras el cribado (conjunto S2_real): precios en terminos reales (cambio del precio promedio de 12 meses
+# deflactado por el cambio del IPC promedio de 12 meses); 0 en las especies donde el precio no aplica.
+CONT_M = ["ipc_yoy", "ipc_yoy_CA", "pib", "pib_agro", "smmlv", "real_var_leche", "real_var_res", "real_var_cerdo", "real_var_huevo", "real_var_pollo"]
 TASKS = {
     "mercado": dict(y="y_mercado", cont=CONT_M, ini="2021-12-01", emb=6, holdout=12, sizes=[6, 12, 18, 24, 30, 36]),
     "compite": dict(y="y_compite", cont=CONT_M, ini="2021-12-01", emb=6, holdout=12, sizes=[6, 12, 18, 24, 30, 36]),

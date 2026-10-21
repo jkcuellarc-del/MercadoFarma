@@ -60,8 +60,18 @@ def main():
                 r[f"{nm}_{lab}"] = met_clase(y, q, m)
         if task in feat_cadena:  # referencia: con el mercado observado (no es lo que ocurrira en 2027)
             r["con_mercado_observado"] = met(y, pipe.predict(te[columnas(task)]))
+        # informativo, declarado antes de la consulta: el modelo de menor MAE de CV si difiere del elegido por la regla de parsimonia.
+        # No cambia la seleccion.
+        alt = min(sel["mejores"], key=lambda k: sel["mejores"][k]["MAE_cv"])
+        pq = None
+        if alt != sel["final"]:
+            ma = sel["mejores"][alt]
+            pq = pipeline(alt, task, ma["balance"], **ma["params"]).fit(tr[columnas(task)], tr[t["y"]]).predict(X)
+            r["alternativa_mejor_cv"] = {"modelo": NOMBRES[alt], "clave": alt, **met(y, pq), "R2": r2(y, pq),
+                                         "m0": met_clase(y, pq, 0.0),
+                                         "por_especie": {e: met(y[(te.Especie == e).to_numpy()], pq[(te.Especie == e).to_numpy()]) for e in ESPS}}
         res[task] = r
-        preds.append(pd.DataFrame({"tarea": task, "Fecha": te.Fecha, "Especie": te.Especie, "real": y, "pred": p, "B2": pb2, "B1": pb1}))
+        preds.append(pd.DataFrame({"tarea": task, "Fecha": te.Fecha, "Especie": te.Especie, "real": y, "pred": p, "pred_alt": pq if pq is not None else np.nan, "B2": pb2, "B1": pb1}))
     (C.REP / "prueba_resultados.json").write_text(json.dumps(res, indent=1, default=float))
     pd.concat(preds).to_csv(C.REP / "prueba_predicciones.csv", index=False)
     lock.write_text(time.strftime("%Y-%m-%d %H:%M:%S"))
