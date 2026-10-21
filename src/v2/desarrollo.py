@@ -162,18 +162,19 @@ def dev(task):
         pd.DataFrame(cr).to_csv(C.REP / f"curva_regularizacion_{task}.csv", index=False)
 
     # --- curvas: iteraciones del boosting y numero de arboles de bagging / bosque
-    g = mejores["gbm"]
+    g = mejores.get("gbm")
     ci, n_max = [], 400
-    et, ev = np.zeros(n_max), np.zeros(n_max)
-    for tr_i, te_i in cv:
-        pg = pipeline("gbm", task, g["balance"], **{**g["params"], "n_estimators": n_max}).fit(X.iloc[tr_i], y[tr_i])
-        pre, est = pg.named_steps["pre"], pg.named_steps["model"].est_
-        et += np.array([np.abs(q - y[tr_i]).mean() for q in est.staged_predict(pre.transform(X.iloc[tr_i]))]) * 100 / len(cv)
-        ev += np.array([np.abs(q - y[te_i]).mean() for q in est.staged_predict(pre.transform(X.iloc[te_i]))]) * 100 / len(cv)
-    pd.DataFrame({"iteracion": np.arange(1, n_max + 1), "MAE_entrenamiento": et, "MAE_cv": ev, "elegida": g["params"].get("n_estimators")}
-                 ).to_csv(C.REP / f"curva_boosting_{task}.csv", index=False)
+    if g is not None:
+        et, ev = np.zeros(n_max), np.zeros(n_max)
+        for tr_i, te_i in cv:
+            pg = pipeline("gbm", task, g["balance"], **{**g["params"], "n_estimators": n_max}).fit(X.iloc[tr_i], y[tr_i])
+            pre, est = pg.named_steps["pre"], pg.named_steps["model"].est_
+            et += np.array([np.abs(q - y[tr_i]).mean() for q in est.staged_predict(pre.transform(X.iloc[tr_i]))]) * 100 / len(cv)
+            ev += np.array([np.abs(q - y[te_i]).mean() for q in est.staged_predict(pre.transform(X.iloc[te_i]))]) * 100 / len(cv)
+        pd.DataFrame({"iteracion": np.arange(1, n_max + 1), "MAE_entrenamiento": et, "MAE_cv": ev, "elegida": g["params"].get("n_estimators")}
+                     ).to_csv(C.REP / f"curva_boosting_{task}.csv", index=False)
     ca = []
-    for kind in ("bagging", "rf"):
+    for kind in [k for k in ("bagging", "rf") if k in mejores]:
         mk = mejores[kind]
         for n in (10, 25, 50, 100, 200, 400, 800):
             po, _ = oof(pipeline(kind, task, mk["balance"], **{**mk["params"], "n_estimators": n}), d, task, cv)
