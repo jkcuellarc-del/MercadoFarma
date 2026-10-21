@@ -1,0 +1,12 @@
+{
+ "fuente": "Base Mercado Salud Animal.csv",
+ "sha256_fuente": "5e0f257d1146ac159f89616588691a7f3b503c4681f9d2b31393598c8fa35896",
+ "corte_desarrollo": "2025-12-01",
+ "filas_desarrollo": 7632,
+ "filas_sellado": 636,
+ "fecha_max_desarrollo": "2025-12-01",
+ "fecha_min_sellado": "2026-01-01",
+ "sha256_desarrollo": "c8a749ca67cfd7b395f1bde79e6d985d115feed6b98a3cb201dd5ffd630a20ba",
+ "sha256_sellado": "e06ea16b6d8c0cbc45826bbbef914e73f2f3b76f1aaf3674ad014bd2bc4b8d9f",
+ "sellado_el": "2026-10-21 03:54:58"
+}
