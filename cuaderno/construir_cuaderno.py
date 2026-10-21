@@ -84,11 +84,11 @@ if COMPLETO:
         print(t, "identica a la oficial:", a == b)
 else:
     print("Modo reducido: la comparacion con los resultados oficiales solo aplica con COMPLETO = True.")'''))
-c.append(md("## 6. Examen de 2026 (una sola consulta) y proyección 2027\nEl cuaderno **no** consulta el examen: lee los resultados guardados cuando se hizo la evaluación única. Si el candado no existe, la evaluación aún no se ha hecho y se corre con `python -m src.v2.prueba`."))
+c.append(md("## 6. Examen de 2026 y proyección 2027\nEl cuaderno **no** consulta el examen: lee los resultados guardados. Hubo una consulta principal (modelo elegido por la regla, el de menor error de validación y los métodos sencillos) y una consulta complementaria posterior, solo informativa (K vecinos, Random Forest y regresión lineal). Si el candado no existe, la evaluación aún no se ha hecho y se corre con `python -m src.v2.prueba`."))
 c.append(code('''OFICIAL = RAIZ / "reports" / "v2"
 lock = OFICIAL / "prueba_consultada.lock"
 if lock.exists():
-    print("El examen se consulto una sola vez el", lock.read_text().strip())
+    print("Consulta principal del examen el", lock.read_text().strip())
     r = json.loads((OFICIAL / "prueba_resultados.json").read_text())
     filas = []
     for t in ("mercado", "compite", r["variante_lab"]):
@@ -96,6 +96,11 @@ if lock.exists():
         filas.append({"tarea": t, "modelo": x["modelo_final"], "MAE_pp": x["MAE_pp"], "base promedio especie": x["B2_media_especie"]["MAE_pp"],
                       "base año anterior": x["B1_crecimiento_hace_12m"]["MAE_pp"], "R2": x["R2"]})
     display(pd.DataFrame(filas).round(2))
+    comp = OFICIAL / "prueba_complementaria.json"
+    if comp.exists():
+        print("\\nConsulta complementaria posterior (solo informativa, no se uso para elegir modelo):", (OFICIAL / "prueba_complementaria.lock").read_text().strip())
+        c = json.loads(comp.read_text())
+        display(pd.DataFrame([{"modelo": k, "MAE mercado": v["mercado"]["MAE_pp"], "MAE laboratorio": v["lab"]["MAE_pp"]} for k, v in c.items()]).round(2))
 else:
     print("El examen aun no se ha consultado. No lo ejecute desde este cuaderno.")'''))
 c.append(code('''proy = OFICIAL / "proyeccion_2027_base.csv"

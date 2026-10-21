@@ -19,7 +19,7 @@ import pandas as pd
 from . import config as C
 from . import datos
 
-PERMITIDOS = {"prueba.py", "datos.py", "sellar_base.py", "verificar_sello.py", "despliegue.py"}  # despliegue.py solo corre despues de la prueba
+PERMITIDOS = {"prueba.py", "prueba_complementaria.py", "datos.py", "sellar_base.py", "verificar_sello.py", "despliegue.py"}  # despliegue.py solo corre despues de la prueba
 TAREAS = ("mercado", "compite", "lab", "lab_ym")
 ARCHIVOS = [f"features_desarrollo_{t}.csv" for t in TAREAS] + ["series_compite.csv", "trm_desarrollo.csv"]
 RESULTADOS = [f"{a}_{t}.{e}" for t in TAREAS for a, e in (("seleccion", "json"), ("cv_grid", "csv"), ("comparacion_cv", "csv"), ("oof", "csv"),

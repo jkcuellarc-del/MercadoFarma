@@ -127,13 +127,15 @@ def main():
     fm = json.loads((C.REP / "seleccion_mercado.json").read_text())["final"]
     fl = json.loads((C.REP / f"seleccion_{lv}.json").read_text())["final"]
     pm, pl = prueba["mercado"], prueba["lab"]
+    cpl = json.loads((C.REP / "prueba_complementaria.json").read_text())  # segunda consulta, informativa
+    ex = lambda k, t: float(cpl[k][t]["MAE_pp"])
     fila = lambda n, cmv, clv, em, el, sep=False: {"nombre": n, "cv_mercado": float(cmv), "cv_lab": float(clv), "ex_mercado": em, "ex_lab": el, "sep": sep}
     comparacion = [
         fila("Modelo A (elegido por la regla): Elastic Net en el mercado y Ridge por especie en el laboratorio", cm[fm], cl[fl], pm["A"], pl["A"]),
         fila("Modelo B: Gradient Boosting", cm["gbm"], cl["gbm"], pm["B"], pl["B"]),
-        fila("K vecinos más cercanos", cm["knn"], cl["knn"], None, None),
-        fila("Random Forest", cm["rf"], cl["rf"], None, None),
-        fila("Modelo base: regresión lineal (sin regularizar)", cm["ols"], cl["ols"], None, None),
+        fila("K vecinos más cercanos", cm["knn"], cl["knn"], ex("knn", "mercado"), ex("knn", "lab")),
+        fila("Random Forest", cm["rf"], cl["rf"], ex("rf", "mercado"), ex("rf", "lab")),
+        fila("Modelo base: regresión lineal (sin regularizar)", cm["ols"], cl["ols"], ex("ols", "mercado"), ex("ols", "lab")),
         fila("Método sencillo: promedio de la especie", cm["B2_media_especie"], cl["B2_media_especie"], pm["prom_especie"], pl["prom_especie"], True),
         fila("Método sencillo: crecimiento del año anterior", cm["B1_crecimiento_hace_12m"], cl["B1_crecimiento_hace_12m"], pm["anio_anterior"], pl["anio_anterior"]),
     ]
