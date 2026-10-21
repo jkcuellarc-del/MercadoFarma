@@ -7,6 +7,8 @@ Conjuntos declarados ANTES de evaluar:
   S3_rezagos   S0 + inflacion y precios rezagados 6 y 12 meses
   S4_mezcla    S0 + participacion del mercado donde compite el Laboratorio en el mercado total, de hace 12 meses
   S5_todo      S2_real + autorregresivo + rezagos + mezcla
+  S6_trm       S0 + TRM (cambio del promedio de 12 meses, y rezagos de 6 y 12 meses)
+  S7_real_trm  S2_real + TRM (igual que S6)
 Objetivos: crecimiento nominal, o crecimiento real (deflactado por el IPC promedio de 12 meses) que se convierte de
 vuelta a nominal sumando la inflacion del escenario.
 """
@@ -24,8 +26,10 @@ PRECIOS = list(PRECIO_DE)
 BASE = ["ipc_yoy", "ipc_yoy_CA", "pib", "pib_agro", "smmlv"] + PRECIOS
 
 
-def extra(df, comp):
+def extra(df, comp, trm):
     p = V.panel(df, comp).sort_values("Fecha")
+    tm = trm.set_index("Fecha").sort_index()["trm_prom"]
+    t_f = pd.DataFrame({"trm_yoy12": V.yoy12(tm), "trm_yoy": tm / tm.shift(12) - 1}).reset_index()
     out = []
     for esp, g in p.groupby("Especie"):
         g = g.set_index("Fecha")
@@ -34,7 +38,8 @@ def extra(df, comp):
         f["ipcm_yoy"] = V.yoy12(g["IPC"])
         f["part_compite"] = g["Mercado_compite"].rolling(12).sum() / g["Mercado"].rolling(12).sum()
         out.append(f.reset_index())
-    return pd.concat(out, ignore_index=True)
+    e = pd.concat(out, ignore_index=True)
+    return e.merge(t_f, on="Fecha", how="left")
 
 
 def ampliar(f, ex):
@@ -46,6 +51,10 @@ def ampliar(f, ex):
     for c in ["ipc_yoy"] + PRECIOS:
         d[c + "_l6"] = g[c].shift(6)
         d[c + "_l12"] = g[c].shift(12)
+    d["trm_real_yoy12"] = (1 + d["trm_yoy12"]) / (1 + d["ipcm_yoy"]) - 1
+    for c in ("trm_yoy12", "trm_real_yoy12"):
+        d[c + "_l6"] = d.groupby("Especie")[c].shift(6)
+        d[c + "_l12"] = d.groupby("Especie")[c].shift(12)
     for y in ("y_mercado", "y_compite"):
         d[y + "_l12"] = g[y].shift(12)
         d[y + "_real"] = (1 + d[y]) / (1 + d["ipcm_yoy"]) - 1
@@ -58,8 +67,9 @@ def conjuntos(target):
     ar = [f"{target}_l12"]
     real = [c for c in BASE if c not in PRECIOS] + ["real_" + k for k in PRECIOS]
     rez = [c + s for c in ["ipc_yoy"] + PRECIOS for s in ("_l6", "_l12")]
+    trm = ["trm_yoy12", "trm_yoy12_l6", "trm_yoy12_l12"]
     return {"S0_actual": BASE, "S1_ar": BASE + ar, "S2_real": real, "S3_rezagos": BASE + rez, "S4_mezcla": BASE + ["part_compite_l12"],
-            "S5_todo": real + ar + rez + ["part_compite_l12"]}
+            "S5_todo": real + ar + rez + ["part_compite_l12"], "S6_trm": BASE + trm, "S7_real_trm": real + trm}
 
 
 def pipeline_cont(kind, cont, **params):

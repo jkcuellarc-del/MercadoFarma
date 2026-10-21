@@ -75,7 +75,7 @@ def correr(task, conjunto="S0_actual", reps=20):
 
 
 def main():
-    out = pd.concat([correr(t, cj) for t, cj in (("mercado", "S0_actual"), ("mercado", "S2_real"), ("compite", "S0_actual"), ("compite", "S2_real"), ("lab", "S0_actual"))], ignore_index=True)
+    out = pd.concat([correr(t, cj) for t, cj in (("mercado", "S0_actual"), ("mercado", "S2_real"), ("mercado", "S7_real_trm"), ("compite", "S0_actual"), ("compite", "S2_real"), ("compite", "S7_real_trm"), ("lab", "S0_actual"), ("lab", "S7_real_trm"))], ignore_index=True)
     out.to_csv(C.REP / "importancia_variables.csv", index=False)
     pd.set_option("display.width", 220, "display.float_format", "{:,.3f}".format)
     print(out.to_string(index=False))

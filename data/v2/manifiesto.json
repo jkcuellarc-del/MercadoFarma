@@ -8,5 +8,10 @@
  "fecha_min_sellado": "2026-01-01",
  "sha256_desarrollo": "c8a749ca67cfd7b395f1bde79e6d985d115feed6b98a3cb201dd5ffd630a20ba",
  "sha256_sellado": "e06ea16b6d8c0cbc45826bbbef914e73f2f3b76f1aaf3674ad014bd2bc4b8d9f",
- "sellado_el": "2026-10-21 03:54:58"
+ "sellado_el": "2026-10-21 05:39:26",
+ "sha256_trm_fuente": "aa8f1fc12e04632495989a481ebb9cdd0d8b0f8984500cd2d5491792f3a717eb",
+ "filas_trm_desarrollo": 72,
+ "filas_trm_sellado": 9,
+ "sha256_trm_desarrollo": "ca61b5d88fbed9f542b8216e8514465db6f9777f78a05fa1889a475b87165ef3",
+ "sha256_trm_sellado": "66775b87971d41abe280032f7749faecf252c3e64792dc882abaf325c561c69b"
 }

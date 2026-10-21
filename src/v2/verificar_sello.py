@@ -8,6 +8,7 @@
 """
 import hashlib
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -20,7 +21,7 @@ from . import datos
 
 PERMITIDOS = {"prueba.py", "datos.py", "sellar_base.py", "verificar_sello.py"}
 TAREAS = ("mercado", "compite", "lab", "lab_ym")
-ARCHIVOS = [f"features_desarrollo_{t}.csv" for t in TAREAS] + ["series_compite.csv"]
+ARCHIVOS = [f"features_desarrollo_{t}.csv" for t in TAREAS] + ["series_compite.csv", "trm_desarrollo.csv"]
 RESULTADOS = [f"{a}_{t}.{e}" for t in TAREAS for a, e in (("seleccion", "json"), ("cv_grid", "csv"), ("comparacion_cv", "csv"), ("oof", "csv"),
               ("umbral", "csv"), ("curva_aprendizaje", "csv"), ("efecto_balance", "csv"), ("sensibilidad_validacion", "csv"),
               ("curva_boosting", "csv"), ("curva_arboles", "csv"))] + ["screening_predictores.csv", "importancia_variables.csv"]
@@ -46,7 +47,13 @@ def canario():
         raw.loc[f > C.CORTE, c] = "999999999"
     tmp = Path(tempfile.mkdtemp(prefix="canario_"))
     raw.to_csv(tmp / "fuente_alterada.csv", index=False, encoding="utf-8-sig")
-    env = {**os.environ, "MF_FUENTE": str(tmp / "fuente_alterada.csv"), "MF_DATA": str(tmp / "data"), "MF_REP": str(tmp / "rep")}
+    trm = datos.leer_trm_fuente(C.TRM_FUENTE)
+    lineas = []
+    for l in open(C.TRM_FUENTE, encoding="utf-8-sig"):
+        m = re.match(r"^(\d{2})/(\d{2})/(\d{4}),", l)
+        lineas.append(f"{m.group(1)}/{m.group(2)}/{m.group(3)},999999,999999\n" if (m and pd.Timestamp(int(m.group(3)), int(m.group(2)), 1) > pd.Timestamp(C.CORTE)) else l)
+    (tmp / "trm_alterada.csv").write_text("".join(lineas), encoding="utf-8-sig")
+    env = {**os.environ, "MF_FUENTE": str(tmp / "fuente_alterada.csv"), "MF_TRM": str(tmp / "trm_alterada.csv"), "MF_DATA": str(tmp / "data"), "MF_REP": str(tmp / "rep")}
     for m in ("sellar_base", "variables", "desarrollo", "seleccion_predictores", "importancia"):
         r = subprocess.run([sys.executable, "-m", f"src.v2.{m}"], cwd=C.ROOT, env=env, capture_output=True, text=True)
         assert r.returncode == 0, r.stderr[-500:]

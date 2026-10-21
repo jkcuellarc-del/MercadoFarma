@@ -28,7 +28,7 @@ EXTRA_LAB = ["y_compite"]
 def datos_tarea(task):
     df = datos.leer_desarrollo()
     comp = pd.read_csv(C.DATA / "series_compite.csv")
-    d = P.ampliar(V.construir(df, comp), P.extra(df, comp))
+    d = P.ampliar(V.construir(df, comp), P.extra(df, comp, datos.leer_trm_desarrollo()))
     d = d[(d.Fecha >= INI[task]) & (d.Fecha <= C.CORTE)].copy()
     for e in ESPS:
         d[f"esp_{e}"] = (d.Especie == e).astype(int)
