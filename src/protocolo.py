@@ -420,7 +420,13 @@ def prueba():
     lock.write_text(time.strftime("%Y-%m-%d %H:%M:%S"))
     print(json.dumps({k: {kk: vv for kk, vv in v.items() if kk in ("modelo_final", "n", "MAE_pp", "sesgo_pp", "acierto", "F1_macro", "costo_medio", "B2_media_especie", "B1_crecimiento_hace_12m", "con_mercado_proyectado")} for k, v in res.items()}, indent=1, default=float))
 
-    # reajuste final para despliegue: entrenamiento + prueba (todo lo observado hasta junio 2026)
+    reajuste_final()
+
+
+def reajuste_final():
+    """Reajuste para despliegue: entrenamiento + prueba (todo lo observado hasta junio 2026).
+    Debe ejecutarse importando el modulo (no como __main__) para que el pickle resuelva las clases."""
+    sels = {k: json.loads((OUT / f"seleccion_{k}.json").read_text()) for k in TASKS}
     for task in ("mercado", "lab"):
         sel, t = sels[task], TASKS[task]
         d = pd.concat([cargar(task, "train"), cargar(task, "prueba")])

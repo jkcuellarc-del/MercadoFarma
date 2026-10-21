@@ -1,0 +1,6 @@
+Especie,crec_mercado,crec_lab,escenario_mercado,escenario_lab
+CA,0.1779657000773398,0.20834174865049276,optimista,optimista
+Cattle,0.14830580953844483,0.04204845714026323,estable,regular
+Poultry,0.0940140821408183,0.1440941130215094,estable,estable
+Swine,0.1959328120477008,0.2806944559931134,optimista,optimista
+Total,0.15850591281934445,0.218371208298473,optimista,optimista

@@ -1,0 +1,234 @@
+{
+ "filas_brutas": 8270,
+ "filas_vacias": 2,
+ "filas_validas": 8268,
+ "duplicadas": 0,
+ "filas_analisis": 8268,
+ "columnas": 25,
+ "fecha_min": "2020-01",
+ "fecha_max": "2026-06",
+ "subgrupos": 83,
+ "series": 106,
+ "mercado_cero": 429,
+ "lab_negativas": 29,
+ "lab_mayor_mercado": 77,
+ "share_mayor_1": 66,
+ "lab_filas_con_venta": {
+  "2020": 0,
+  "2021": 34,
+  "2022": 402,
+  "2023": 398,
+  "2024": 407,
+  "2025": 380,
+  "2026": 181
+ },
+ "grupo_empresa_valores": 19,
+ "grupo_empresa_nulos": 24,
+ "segmentos_por_especie": {
+  "CA": [
+   "Antimicrobiano",
+   "Antiparasitarios",
+   "Biologicos Caninos",
+   "Biologicos Felinos",
+   "Other Pharma",
+   "Pain"
+  ],
+  "Cattle": [
+   "Antimicrobiano",
+   "Antiparasitarios",
+   "Hormonal",
+   "Non Pharma",
+   "Vacunas"
+  ],
+  "Poultry": [
+   "Vacunas"
+  ],
+  "Swine": [
+   "Antimicrobiano",
+   "Vacunas"
+  ]
+ },
+ "filas_por_especie": {
+  "Cattle": 2652,
+  "CA": 2496,
+  "Poultry": 1872,
+  "Swine": 1248
+ },
+ "ficha": [
+  {
+   "columna": "Especie",
+   "tipo": "Categórica",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 4
+  },
+  {
+   "columna": "Segmento",
+   "tipo": "Categórica",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 9
+  },
+  {
+   "columna": "Año",
+   "tipo": "Entera",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 7
+  },
+  {
+   "columna": "Subgrupo",
+   "tipo": "Categórica",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 83
+  },
+  {
+   "columna": "Mes",
+   "tipo": "Categórica (nombre del mes)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 12
+  },
+  {
+   "columna": "Mercado",
+   "tipo": "Numérica (COP; texto con comas)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 7808
+  },
+  {
+   "columna": "Crec Mercado Q movil",
+   "tipo": "Porcentaje (texto con %)",
+   "faltantes": 1683,
+   "pct": 20.355587808417997,
+   "unicos": 6367
+  },
+  {
+   "columna": "Crec Mercado Año",
+   "tipo": "Porcentaje (texto con %)",
+   "faltantes": 1428,
+   "pct": 17.271407837445572,
+   "unicos": 617
+  },
+  {
+   "columna": "Fecha",
+   "tipo": "Fecha (dd/mm/aaaa)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 78
+  },
+  {
+   "columna": "Grupo Empresa",
+   "tipo": "Categórica (etiqueta ambigua)",
+   "faltantes": 24,
+   "pct": 0.29027576197387517,
+   "unicos": 19
+  },
+  {
+   "columna": "Precio Leche",
+   "tipo": "Numérica (COP/litro)",
+   "faltantes": 5616,
+   "pct": 67.9245283018868,
+   "unicos": 74
+  },
+  {
+   "columna": "Precio Carne Res",
+   "tipo": "Numérica (COP/kg)",
+   "faltantes": 5616,
+   "pct": 67.9245283018868,
+   "unicos": 78
+  },
+  {
+   "columna": "Precio carne cerdo",
+   "tipo": "Numérica (COP/kg)",
+   "faltantes": 7020,
+   "pct": 84.90566037735849,
+   "unicos": 78
+  },
+  {
+   "columna": "Precio huevo",
+   "tipo": "Numérica (COP)",
+   "faltantes": 6396,
+   "pct": 77.35849056603774,
+   "unicos": 67
+  },
+  {
+   "columna": "Precio Pollo",
+   "tipo": "Numérica (COP/kg)",
+   "faltantes": 6396,
+   "pct": 77.35849056603774,
+   "unicos": 76
+  },
+  {
+   "columna": "Perros",
+   "tipo": "Entera (texto con comas)",
+   "faltantes": 5772,
+   "pct": 69.81132075471697,
+   "unicos": 7
+  },
+  {
+   "columna": "Gatos",
+   "tipo": "Entera (texto con comas)",
+   "faltantes": 5772,
+   "pct": 69.81132075471697,
+   "unicos": 7
+  },
+  {
+   "columna": "IPC",
+   "tipo": "Numérica (índice)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 76
+  },
+  {
+   "columna": "Inflación Mensual",
+   "tipo": "Numérica (fracción)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 77
+  },
+  {
+   "columna": "PIB",
+   "tipo": "Numérica (% anual)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 7
+  },
+  {
+   "columna": "PIB Agro",
+   "tipo": "Numérica (% anual)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 7
+  },
+  {
+   "columna": "Porc Crec SMMLV",
+   "tipo": "Numérica (fracción)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 7
+  },
+  {
+   "columna": "Venta Laboratorio",
+   "tipo": "Numérica (COP; con comas)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 1801
+  },
+  {
+   "columna": "Share Laboratorio",
+   "tipo": "Numérica (fracción)",
+   "faltantes": 0,
+   "pct": 0.0,
+   "unicos": 1742
+  },
+  {
+   "columna": "Crec Laboratorio año",
+   "tipo": "Porcentaje (texto con %)",
+   "faltantes": 6618,
+   "pct": 80.04354136429608,
+   "unicos": 153
+  }
+ ]
+}
