@@ -1,0 +1,343 @@
+<title>Simulador Mercado Animal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: panel de controles a la izquierda, resultados y gráficos a la derecha; una columna en móvil. */
+:root{
+  --bg:#f2f5f4; --card:#ffffff; --ink:#13201c; --ink2:#4a5a55; --ink3:#6f7f7a; --line:#dbe3e0; --grid:#e8eeec;
+  --accent:#0d6b5b; --accent-ink:#ffffff; --track:#dfe7e4;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --pos:#2a78d6; --neg:#eb6834;
+  --reg-bg:#fdecd9; --reg-fg:#8a4a00; --est-bg:#e4edf8; --est-fg:#1d4f91; --opt-bg:#dcf1e6; --opt-fg:#0f6b3f;
+  --warn-bg:#fff3d6; --warn-fg:#7a5200;
+  --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-d:'IBM Plex Sans Condensed','IBM Plex Sans',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1514; --card:#172120; --ink:#e7f0ed; --ink2:#a9bbb5; --ink3:#8a9c96; --line:#2a3836; --grid:#223130;
+    --accent:#4fc3a8; --accent-ink:#06211b; --track:#2a3836;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --pos:#3987e5; --neg:#d95926;
+    --reg-bg:#3b2a12; --reg-fg:#f3c88a; --est-bg:#16283f; --est-fg:#9cc2f2; --opt-bg:#123626; --opt-fg:#8fddb4;
+    --warn-bg:#3a2e0e; --warn-fg:#f1d58a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1514; --card:#172120; --ink:#e7f0ed; --ink2:#a9bbb5; --ink3:#8a9c96; --line:#2a3836; --grid:#223130;
+  --accent:#4fc3a8; --accent-ink:#06211b; --track:#2a3836;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --pos:#3987e5; --neg:#d95926;
+  --reg-bg:#3b2a12; --reg-fg:#f3c88a; --est-bg:#16283f; --est-fg:#9cc2f2; --opt-bg:#123626; --opt-fg:#8fddb4;
+  --warn-bg:#3a2e0e; --warn-fg:#f1d58a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:20px}
+header h1{font-family:var(--font-d);font-weight:600;font-size:28px;letter-spacing:-.01em;margin:0 0 4px;text-wrap:balance}
+header p{margin:0;color:var(--ink2);max-width:70ch}
+.layout{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.controls{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+@media (max-width:900px){.controls{position:static;max-height:none}}
+h2{font-family:var(--font-d);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin:0 0 10px}
+h3{font-size:14px;font-weight:600;margin:14px 0 6px}
+.ctl{display:grid;gap:4px;margin:0 0 12px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctl label{font-size:14px;font-weight:500}
+.ctl .base{font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.ctl .in{display:flex;align-items:center;gap:10px}
+.ctl input[type=number]{width:78px;font:inherit;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 6px;text-align:right}
+.ctl input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.unit{font-size:12px;color:var(--ink3);width:18px}
+.warn{background:var(--warn-bg);color:var(--warn-fg);border-radius:6px;padding:5px 8px;font-size:12px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:6px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:7px 14px;background:var(--card)}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.note{font-size:12.5px;color:var(--ink3)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.card.total{border-color:var(--accent);grid-column:1/-1}
+.card .name{font-family:var(--font-d);font-weight:600;font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.sw{width:10px;height:10px;border-radius:2px;flex:none}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card.total .metrics{max-width:520px}
+.m .k{font-size:12px;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em}
+.m .v{font-family:var(--font-d);font-size:34px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.m .d,.m .b{font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;border-radius:99px;padding:2px 9px;margin:4px 0}
+.pill.regular{background:var(--reg-bg);color:var(--reg-fg)}
+.pill.estable{background:var(--est-bg);color:var(--est-fg)}
+.pill.optimista{background:var(--opt-bg);color:var(--opt-fg)}
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink2);margin:8px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.chartbox{position:relative}
+svg{display:block;width:100%;height:auto}
+svg text{fill:var(--ink2);font-family:var(--font);font-size:11px;font-variant-numeric:tabular-nums}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;border-radius:6px;font-size:12px;white-space:nowrap;transform:translate(-50%,-110%);z-index:5}
+.torn{display:grid;gap:6px}
+.tr{display:grid;grid-template-columns:minmax(120px,190px) 1fr 62px;gap:8px;align-items:center;font-size:13px}
+.tr .bar{position:relative;height:14px;background:var(--grid);border-radius:3px}
+.tr .bar i{position:absolute;top:0;bottom:0;border-radius:3px}
+.tr .bar::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--ink3)}
+.tr .val{text-align:right;font-variant-numeric:tabular-nums}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+.tw{overflow-x:auto}
+details summary{cursor:pointer;color:var(--ink2);font-size:13px}
+ul.src{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink2)}
+a{color:var(--accent)}
+
+.banner{grid-template-columns:minmax(0,1fr);background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:14px 16px;display:grid;gap:8px}
+.banner h2{margin:0}
+.banner p{margin:0;font-size:14px;color:var(--ink2)}
+.mk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2)}
+.cards .card .rng{font-family:var(--font-d);font-size:24px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:13px;margin-top:4px;font-variant-numeric:tabular-nums}
+.mrow .tag{color:var(--ink2);white-space:nowrap}
+.mrow b{font-weight:600}
+.pill{margin:0;white-space:nowrap}
+.cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr))}
+.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+.m{min-width:0}
+.mrow{flex-wrap:wrap}
+.warnbox{background:var(--warn-bg);color:var(--warn-fg);border-radius:8px;padding:8px 12px;font-size:13px}
+.tr2{display:grid;grid-template-columns:minmax(120px,200px) 1fr 108px;gap:8px;align-items:center;font-size:13px}
+.tr2 .bars{display:grid;gap:3px}
+.tr2 .bar{position:relative;height:9px;background:var(--grid);border-radius:3px}
+.tr2 .bar i{position:absolute;top:0;bottom:0;border-radius:3px}
+.tr2 .bar::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--ink3)}
+.tr2 .val{text-align:right;font-variant-numeric:tabular-nums;font-size:12px;line-height:1.35}
+:root{--mA:#6250d6;--mB:#e0883a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--mA:#9085e9;--mB:#f0a15a}}
+:root[data-theme="dark"]{--mA:#9085e9;--mB:#f0a15a}
+
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Simulador del mercado de salud animal 2027</h1>
+  <p>Mueve las variables económicas y los precios para ver cómo cambia el crecimiento del mercado farmacéutico de salud animal en Colombia y el del Laboratorio, por especie. Crecimiento nominal 2027 frente a 2026, calculado con dos modelos.</p>
+</header>
+
+<section class="banner" aria-label="Cómo leer el simulador">
+  <h2>Dos modelos, un rango</h2>
+  <p><b>Modelo A (elegido por la regla de selección):</b> un modelo lineal muy regularizado. En validación cruzada fue el más simple entre los de rendimiento parecido, pero en el examen de enero a junio de 2026 <b>no superó</b> a los métodos sencillos y casi no reacciona a las variables.</p>
+  <p><b>Modelo B (Gradient Boosting):</b> el de menor error tanto en validación cruzada como en el examen. Se incorporó <b>después de ver el examen</b>, así que su error real puede ser mayor: se validará con los datos de julio a diciembre de 2026.</p>
+  <p>Cada resultado se muestra como rango entre ambos. Los efectos de cada variable son pequeños. El modelo B reacciona sobre todo a los precios de las carnes y, como trabaja con precios reales, también a la inflación; el modelo A casi no reacciona a nada.</p>
+  <div class="tw" style="max-width:560px"><table><thead><tr><th>Error en el examen de 2026 (puntos)</th><th>Mercado</th><th>Laboratorio</th></tr></thead><tbody id="tprueba"></tbody></table></div>
+</section>
+
+<div class="layout">
+  <aside class="panel controls" aria-label="Variables del simulador">
+    <div class="tools" style="margin-bottom:10px">
+      <h2 style="margin:0">Variables 2027</h2>
+      <button id="reset" type="button">Restablecer base</button>
+    </div>
+    <h3 style="margin-top:4px">Generales · aplican a todas las especies</h3>
+    <div id="gen"></div>
+    <h3>Precios · cambio nominal del promedio 2027 frente a 2026</h3>
+    <div id="pre"></div>
+    <p class="note">Los modelos usan el precio <b>real</b>: el cambio nominal que escribes descontado por la inflación. Animales de compañía no tiene precios propios y responde a las variables generales. El crecimiento mostrado es nominal, así que incluye inflación.</p>
+  </aside>
+
+  <main style="display:grid;gap:16px;min-width:0">
+    <div class="tools">
+      <div class="seg" role="group" aria-label="Ver">
+        <button type="button" id="vMer" aria-pressed="true">Mercado</button>
+        <button type="button" id="vLab" aria-pressed="false">Laboratorio</button>
+      </div>
+      <span class="note">Escenarios: regular &lt; 8% · estable 8% a 15% · optimista &gt; 15%</span>
+    </div>
+    <div id="avisos"></div>
+    <section aria-label="Resultados" class="cards" id="cards"></section>
+
+    <section class="panel" aria-label="Historia y proyección">
+      <h2 id="chTitle">Crecimiento anual del mercado por especie</h2>
+      <div class="legend" id="legend"></div>
+      <div class="chartbox" id="chartbox"><svg id="chart" viewBox="0 0 780 330" role="img" aria-label="Crecimiento anual por especie, historia y proyección 2027 de los dos modelos"></svg><div class="tip" id="tip" hidden></div></div>
+      <p class="note">Línea continua: crecimiento observado de 12 meses (el último punto es a junio de 2026). Círculo hueco: proyección 2027 del modelo A. Rombo: modelo B. La barra vertical une ambos.</p>
+      <details><summary>Ver como tabla</summary><div class="tw" id="tbl"></div></details>
+    </section>
+
+    <section class="panel" aria-label="Sensibilidad">
+      <h2 id="seTitle">Qué mueve más el crecimiento total</h2>
+      <div class="legend"><span><span class="sw" style="background:var(--mA)"></span>Modelo A</span><span><span class="sw" style="background:var(--mB)"></span>Modelo B</span></div>
+      <div class="torn" id="torn"></div>
+      <p class="note">Cambio en puntos porcentuales del crecimiento total al mover cada variable desde los valores actuales: +1 punto en las variables económicas y +10 puntos en el cambio nominal de cada precio.</p>
+    </section>
+
+    <section class="panel" aria-label="Sobre los modelos">
+      <h2>Sobre los modelos y los valores base</h2>
+      <p class="note" style="font-size:13.5px;color:var(--ink2)">Ambos se entrenaron con ventas mensuales de 2020 a junio de 2026 (crecimiento de 12 meses móviles por especie). Con cinco años de historia los efectos son pequeños y aproximados: úsalo para ver la dirección y el orden de magnitud. El margen de error es el promedio del error en validación cruzada y en el examen. El modelo del Laboratorio usa además el crecimiento del mercado que proyecta el mismo modelo. Los resultados describen asociaciones del pasado, no efectos causales.</p>
+      <h3>Valores base de 2027</h3>
+      <ul class="src">
+        <li>Inflación 5,1%: encuesta de analistas del Banco de la República (diciembre de 2027). El equipo técnico del Banco proyecta 4,3% y el Gobierno 4,8%.</li>
+        <li>PIB 2,3%: BBVA Research. El consenso de analistas va de 1,8% a 2,6%.</li>
+        <li>PIB agropecuario y salario mínimo: promedios históricos (2020-2025 y 2022-2025), sin pronóstico público.</li>
+        <li>Precios: se mantienen en su nivel de junio de 2026 durante 2027; el cambio mostrado es frente al promedio de 2026.</li>
+      </ul>
+    </section>
+  </main>
+</div>
+</div>
+
+<script>
+const M = __MODELO__;
+const ESP = M.especies;
+const NAME = {CA:'Animales de compañía', Cattle:'Bovinos', Poultry:'Aves', Swine:'Cerdos', Total:'Total'};
+const COLOR = {CA:'var(--s1)', Cattle:'var(--s2)', Poultry:'var(--s3)', Swine:'var(--s4)'};
+const PR = {var_res:['Cattle','Carne de res'], var_leche:['Cattle','Leche'], var_cerdo:['Swine','Carne de cerdo'], var_huevo:['Poultry','Huevo'], var_pollo:['Poultry','Pollo']};
+const GEN = [
+  {k:'ipc', label:'Inflación 2027 (IPC, dic a dic)', min:0, max:12, step:.1, r:'ipc_yoy', f:100},
+  {k:'pib', label:'Crecimiento del PIB', min:-3, max:8, step:.1, r:'pib', f:1},
+  {k:'agro', label:'Crecimiento del PIB agropecuario', min:-5, max:10, step:.1, r:'pib_agro', f:1},
+  {k:'smmlv', label:'Aumento del salario mínimo', min:0, max:25, step:.1, r:'smmlv', f:100},
+];
+const FR = {ipc_yoy:'inflación', ipc_yoy_CA:'inflación', pib:'PIB', pib_agro:'PIB agropecuario', smmlv:'salario mínimo', real_var_res:'precio de la carne de res', real_var_leche:'precio de la leche', real_var_cerdo:'precio de la carne de cerdo', real_var_huevo:'precio del huevo', real_var_pollo:'precio del pollo'};
+const fmt = (v,d=1)=> v.toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pc = v => fmt(v*100)+'%';
+const sg = (v,d=1)=> (v>=0?'+':'−')+fmt(Math.abs(v),d);
+const r1 = x => Math.round(x*10)/10;
+const base0 = (()=>{ const b=M.base, s={ipc:r1(b.ipc*100), pib:r1(b.pib), agro:r1(b.pib_agro), smmlv:r1(b.smmlv*100)}; for(const k in PR) s[k]=r1(b.nominal[k]*100); return s; })();
+let S = {...base0}, view='mercado';
+
+function feats(s,e,ym){
+  const ipc=s.ipc/100, r={ipc_yoy:ipc, ipc_yoy_CA:e==='CA'?ipc:0, pib:s.pib, pib_agro:s.agro, smmlv:s.smmlv/100};
+  for(const k in PR) r['real_'+k] = PR[k][0]===e ? (1+s[k]/100)/(1+ipc)-1 : 0;
+  if(ym!==undefined) r.y_mercado=ym;
+  return r;
+}
+function evalM(m,r,e){
+  const z={}; for(const k of m.cont) z[k]=(r[k]-m.mean[k])/m.scale[k];
+  if(m.tipo==='por_especie'){ const q=m.especies[e]; let y=q.intercept; for(const k of m.cont) y+=q.coef[k]*z[k]; return y; }
+  if(m.tipo==='comun'){ let y=m.intercept; for(const k of m.cont) y+=m.coef[k]*z[k]; for(const x of ESP) y+=m.coef['esp_'+x]*(x===e?1:0); return y; }
+  const vec=m.cont.map(k=>z[k]).concat(ESP.map(x=>x===e?1:0)); let y=m.init;
+  for(const t of m.arboles){ let n=0; while(t.l[n]!==-1) n = vec[t.f[n]]<=t.t[n] ? t.l[n] : t.r[n]; y+=m.lr*t.v[n]; }
+  return y;
+}
+function predict(g,s){
+  const out={}, mod=M.modelos[g];
+  for(const e of ESP){ const m=evalM(mod.mercado,feats(s,e),e); const l=evalM(mod.lab,feats(s,e,m),e); out[e]={mercado:m,lab:l}; }
+  out.Total={}; for(const k of ['mercado','lab']) out.Total[k]=ESP.reduce((a,e)=>a+M.pesos[k][e]*out[e][k],0);
+  return out;
+}
+const scen = v => v<.08?['regular','▼ Regular']:v<.15?['estable','● Estable']:['optimista','▲ Optimista'];
+const band = (g,k,e)=> M.bandas[g][k][e]/100;
+
+/* ---------- controles ---------- */
+function ctl(host,id,label,unit,min,max,step,baseTxt){
+  const d=document.createElement('div'); d.className='ctl';
+  d.innerHTML=`<div class="row"><label for="n_${id}">${label}</label><span class="base">Base: ${baseTxt}</span></div>
+  <div class="in"><input type="range" id="r_${id}" min="${min}" max="${max}" step="${step}" aria-label="${label}">
+  <input type="number" id="n_${id}" step="${step}" inputmode="decimal"><span class="unit">${unit}</span></div>`;
+  host.appendChild(d);
+  const r=d.querySelector('#r_'+id), n=d.querySelector('#n_'+id);
+  r.addEventListener('input',()=>{S[id]=+r.value;n.value=S[id];update();});
+  n.addEventListener('input',()=>{const v=parseFloat(n.value.replace(',','.')); if(!isNaN(v)){S[id]=v;r.value=v;update();}});
+}
+GEN.forEach(g=>ctl(document.getElementById('gen'),g.k,g.label,'%',g.min,g.max,g.step,fmt(base0[g.k])+'%'));
+const preHost=document.getElementById('pre');
+for(const sp of ['Cattle','Swine','Poultry']){
+  const h=document.createElement('h3'); h.style.cssText='font-size:13px;color:var(--ink2);margin:10px 0 6px;display:flex;gap:8px;align-items:center';
+  h.innerHTML=`<span class="sw" style="background:${COLOR[sp]}"></span>${NAME[sp]}`; preHost.appendChild(h);
+  for(const k in PR) if(PR[k][0]===sp) ctl(preHost,k,'Precio '+PR[k][1].toLowerCase(),'%',-30,30,.5,sg(base0[k])+'%');
+}
+function syncControls(){ for(const k in S){ const r=document.getElementById('r_'+k), n=document.getElementById('n_'+k); if(r){r.value=S[k]; if(document.activeElement!==n) n.value=S[k];} } }
+function avisos(){
+  const fuera=new Set();
+  for(const e of ESP){ const r=feats(S,e); for(const k in M.rangos[e]){ const [a,b]=M.rangos[e][k], mg=0.1*(b-a)+1e-6; if(r[k]<a-mg||r[k]>b+mg) fuera.add(FR[k]); } }
+  document.getElementById('avisos').innerHTML = fuera.size ? `<div class="warnbox">Fuera del rango visto entre 2021 y 2026: ${[...fuera].join(', ')}. El resultado es una extrapolación; los árboles del modelo B no pasan de los valores que vieron.</div>` : '';
+}
+
+/* ---------- resultados ---------- */
+const cardsEl=document.getElementById('cards');
+function renderCards(pa,pb,ba,bb){
+  cardsEl.innerHTML=['Total',...ESP].map(e=>{
+    const sw = e==='Total' ? '' : `<span class="sw" style="background:${COLOR[e]}"></span>`;
+    const one=(k,lbl)=>{ const a=pa[e][k], b=pb[e][k], lo=Math.min(a,b), hi=Math.max(a,b);
+      const rng = Math.abs(hi-lo)<.0005 ? pc(a) : `${pc(lo)} a ${pc(hi)}`;
+      const row=(tag,v,g,b0)=>{ const [c,t]=scen(v), d=(v-b0)*100; return `<div class="mrow"><span class="tag">${tag}</span><b>${pc(v)}</b><span class="pill ${c}">${t}</span></div><div class="mrow" style="margin-top:0"><span class="note">± ${fmt(band(g,k,e)*100)} pts · ${Math.abs(d)<.05?'igual a la base':sg(d)+' pts vs. base'}</span></div>`; };
+      return `<div class="m"><div class="k">${lbl}</div><div class="rng">${rng}</div>${row('Modelo A',a,'A',ba[e][k])}${row('Modelo B',b,'B',bb[e][k])}</div>`; };
+    return `<article class="card ${e==='Total'?'total':''}"><h3 class="name">${sw}${NAME[e]}${e==='Total'?' · ponderado por ventas de los últimos 12 meses':''}</h3><div class="metrics">${one('mercado','Mercado')}${one('lab','Laboratorio')}</div></article>`; }).join('');
+}
+
+/* ---------- grafico ---------- */
+const XS=['2021','2022','2023','2024','2025','jun2026','proy'];
+const XL=['2021','2022','2023','2024','2025','12 m a jun-26','2027 proy.'];
+function renderChart(pa,pb){
+  const k=view, svg=document.getElementById('chart'), W=780,H=330,L=44,Rm=190,T=14,B=34;
+  const hist=e=>XS.slice(0,6).map(x=>M.historia[k][e][x]);
+  const ser=ESP.map(e=>({e,h:hist(e),a:pa[e][k],b:pb[e][k]}));
+  const vals=ser.flatMap(s=>[...s.h.filter(v=>v!=null),s.a,s.b]);
+  let lo=Math.min(0,...vals), hi=Math.max(.2,...vals); lo=Math.floor(lo/.1)*.1; hi=Math.ceil(hi/.1)*.1;
+  const x=i=>L+(W-L-Rm)*i/(XS.length-1), y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  let s='';
+  const step=(hi-lo)>.6?.2:.1;
+  for(let v=Math.ceil(lo/step)*step; v<=hi+1e-9; v+=step) s+=`<line x1="${L}" x2="${W-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${Math.round(v*100)}%</text>`;
+  for(const th of [.08,.15]) if(th>lo&&th<hi) s+=`<line x1="${L}" x2="${W-Rm}" y1="${y(th)}" y2="${y(th)}" stroke="var(--ink3)" stroke-dasharray="2 4"/><text x="${L+4}" y="${y(th)-4}" style="font-size:10px">${th*100}%</text>`;
+  XL.forEach((t,i)=>s+=`<text x="${x(i)}" y="${H-12}" text-anchor="middle" style="font-size:10px">${t}</text>`);
+  const ends=ser.map(o=>({e:o.e,y:y((o.a+o.b)/2)})).sort((p,q)=>p.y-q.y); for(let i=1;i<ends.length;i++) if(ends[i].y-ends[i-1].y<13) ends[i].y=ends[i-1].y+13;
+  const hits=[];
+  ser.forEach(o=>{
+    const c=COLOR[o.e]; const pts=o.h.map((v,i)=>v==null?null:[x(i),y(v),v,XL[i]]).filter(Boolean), last=pts[pts.length-1], px=x(6);
+    s+=`<polyline fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round" points="${pts.map(q=>q[0]+','+q[1]).join(' ')}"/>`;
+    s+=pts.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="3" fill="${c}" stroke="var(--card)" stroke-width="2"/>`).join('');
+    for(const v of [o.a,o.b]) s+=`<line x1="${last[0]}" y1="${last[1]}" x2="${px}" y2="${y(v)}" stroke="${c}" stroke-width="1.5" stroke-dasharray="4 4" opacity=".7"/>`;
+    s+=`<line x1="${px}" x2="${px}" y1="${y(o.a)}" y2="${y(o.b)}" stroke="${c}" stroke-width="2" opacity=".5"/>`;
+    s+=`<circle cx="${px}" cy="${y(o.a)}" r="5" fill="var(--card)" stroke="${c}" stroke-width="2"/>`;
+    s+=`<path d="M${px} ${y(o.b)-6} L${px+6} ${y(o.b)} L${px} ${y(o.b)+6} L${px-6} ${y(o.b)} Z" fill="${c}" stroke="var(--card)" stroke-width="1.5"/>`;
+    const ly=ends.find(z=>z.e===o.e).y; const lo_=Math.min(o.a,o.b), hi_=Math.max(o.a,o.b);
+    s+=`<text x="${px+12}" y="${ly+4}" style="fill:var(--ink);font-weight:500">${NAME[o.e].replace('Animales de compañía','Compañía')} ${Math.abs(hi_-lo_)<.0005?pc(o.a):fmt(lo_*100)+'–'+pc(hi_)}</text>`;
+    pts.forEach(q=>hits.push([q[0],q[1],`${NAME[o.e]} ${q[3]}: ${pc(q[2])}`]));
+    hits.push([px,y(o.a),`${NAME[o.e]} 2027, modelo A: ${pc(o.a)} (± ${fmt(band('A',k,o.e)*100)} pts)`]);
+    hits.push([px,y(o.b),`${NAME[o.e]} 2027, modelo B: ${pc(o.b)} (± ${fmt(band('B',k,o.e)*100)} pts)`]);
+  });
+  hits.forEach(h=>s+=`<circle cx="${h[0]}" cy="${h[1]}" r="11" fill="transparent" data-t="${h[2]}" data-x="${h[0]}" data-y="${h[1]}" class="hit"/>`);
+  svg.innerHTML=s;
+  const box=document.getElementById('chartbox'), tip=document.getElementById('tip');
+  svg.querySelectorAll('.hit').forEach(c=>{
+    c.addEventListener('pointerenter',()=>{const r=svg.getBoundingClientRect(),b=box.getBoundingClientRect(),sc=r.width/W;
+      tip.textContent=c.dataset.t; tip.style.left=(r.left-b.left+ +c.dataset.x*sc)+'px'; tip.style.top=(r.top-b.top+ +c.dataset.y*sc)+'px'; tip.hidden=false;});
+    c.addEventListener('pointerleave',()=>tip.hidden=true);
+  });
+  document.getElementById('legend').innerHTML=ESP.map(e=>`<span><span class="sw" style="background:${COLOR[e]}"></span>${NAME[e]}</span>`).join('')+'<span class="mk">○ modelo A</span><span class="mk">◆ modelo B</span>';
+  const rows=ESP.map(e=>`<tr><td>${NAME[e]}</td>${XS.slice(0,6).map(c=>`<td>${M.historia[k][e][c]==null?'–':pc(M.historia[k][e][c])}</td>`).join('')}<td><b>${pc(pa[e][k])}</b></td><td><b>${pc(pb[e][k])}</b></td></tr>`).join('');
+  document.getElementById('tbl').innerHTML=`<table><thead><tr><th>Especie</th>${XL.slice(0,6).map(t=>`<th>${t}</th>`).join('')}<th>2027 A</th><th>2027 B</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ---------- sensibilidad ---------- */
+function renderTornado(pa,pb){
+  const k=view, items=[];
+  const tot=(g,s)=>predict(g,s).Total[k]*100;
+  const ta=pa.Total[k]*100, tb=pb.Total[k]*100;
+  const shocks=GEN.map(g=>[g.label.replace(' 2027 (IPC, dic a dic)','').replace('Crecimiento del ','').replace('Aumento del ','').replace(/^./,c=>c.toUpperCase())+' +1 pt', g.k, 1]).concat(Object.keys(PR).map(q=>[`Precio ${PR[q][1].toLowerCase()} +10 pts (${NAME[PR[q][0]].toLowerCase()})`, q, 10]));
+  for(const [n,v,st] of shocks){ const t={...S}; t[v]+=st; items.push([n, tot('A',t)-ta, tot('B',t)-tb]); }
+  items.sort((p,q)=>Math.max(Math.abs(q[1]),Math.abs(q[2]))-Math.max(Math.abs(p[1]),Math.abs(p[2])));
+  const mx=Math.max(.3,...items.flatMap(i=>[Math.abs(i[1]),Math.abs(i[2])]));
+  const bar=(d,c)=>`<div class="bar"><i style="background:${c};${d>=0?'left:50%':'right:50%'};width:${Math.abs(d)/mx*50}%"></i></div>`;
+  document.getElementById('torn').innerHTML=items.map(([n,da,db])=>`<div class="tr2"><span>${n}</span><div class="bars">${bar(da,'var(--mA)')}${bar(db,'var(--mB)')}</div><span class="val">A ${sg(da,2)} pts<br>B ${sg(db,2)} pts</span></div>`).join('');
+  document.getElementById('seTitle').textContent = `Qué mueve más el crecimiento total ${k==='mercado'?'del mercado':'del laboratorio'}`;
+  document.getElementById('chTitle').textContent = `Crecimiento anual ${k==='mercado'?'del mercado':'del laboratorio'} por especie`;
+}
+
+/* ---------- examen ---------- */
+(()=>{ const p=M.prueba, f=(x)=>fmt(x,1); const rows=[['Modelo A (regla de selección)','A'],['Modelo B (Gradient Boosting)','B'],['Método sencillo: promedio de la especie','prom_especie'],['Método sencillo: crecimiento del año anterior','anio_anterior']];
+  document.getElementById('tprueba').innerHTML=rows.map(([n,k])=>`<tr><td>${n}</td><td>${f(p.mercado[k])}</td><td>${f(p.lab[k])}</td></tr>`).join(''); })();
+
+const pBase={A:predict('A',base0),B:predict('B',base0)};
+function update(){ syncControls(); avisos(); const pa=predict('A',S), pb=predict('B',S); renderCards(pa,pb,pBase.A,pBase.B); renderChart(pa,pb); renderTornado(pa,pb); }
+document.getElementById('reset').onclick=()=>{S={...base0};update();};
+for(const [id,v] of [['vMer','mercado'],['vLab','lab']]) document.getElementById(id).onclick=()=>{view=v;
+  document.getElementById('vMer').setAttribute('aria-pressed',v==='mercado'); document.getElementById('vLab').setAttribute('aria-pressed',v==='lab'); update();};
+update();
+</script>

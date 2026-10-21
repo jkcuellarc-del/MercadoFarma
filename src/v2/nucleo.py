@@ -87,7 +87,8 @@ class PerEspecie(BaseEstimator, RegressorMixin):
         sp = X[:, -4:].argmax(1)
         p = np.full(len(X), self.mean_)
         for k, m in self.models_.items():
-            p[sp == k] = m.predict(X[sp == k][:, :-4])
+            if (sp == k).any():
+                p[sp == k] = m.predict(X[sp == k][:, :-4])
         return p
 
 
