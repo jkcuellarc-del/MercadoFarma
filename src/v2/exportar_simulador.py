@@ -122,7 +122,21 @@ def main():
                           "anio_anterior": res["mercado"]["B1_crecimiento_hace_12m"]["MAE_pp"]},
               "lab": {"A": res[lv]["MAE_pp"], "B": res[lv]["alternativa_mejor_cv"]["MAE_pp"], "prom_especie": res[lv]["B2_media_especie"]["MAE_pp"],
                       "anio_anterior": res[lv]["B1_crecimiento_hace_12m"]["MAE_pp"]}}
-    out = {"especies": ESPS, "base": {k: v for k, v in base.items() if k != "pesos"}, "pesos": base["pesos"], "modelos": {"A": A, "B": B},
+    cm = pd.read_csv(C.REP / "comparacion_cv_mercado.csv").set_index("modelo")["MAE_cv"]
+    cl = pd.read_csv(C.REP / f"comparacion_cv_{lv}.csv").set_index("modelo")["MAE_cv"]
+    fm = json.loads((C.REP / "seleccion_mercado.json").read_text())["final"]
+    fl = json.loads((C.REP / f"seleccion_{lv}.json").read_text())["final"]
+    pm, pl = prueba["mercado"], prueba["lab"]
+    fila = lambda n, cmv, clv, em, el: {"nombre": n, "cv_mercado": float(cmv), "cv_lab": float(clv), "ex_mercado": em, "ex_lab": el}
+    comparacion = [
+        fila("Modelo A: elegido por la regla (Elastic Net en el mercado; Ridge por especie en el laboratorio)", cm[fm], cl[fl], pm["A"], pl["A"]),
+        fila("Modelo B: Gradient Boosting", cm["gbm"], cl["gbm"], pm["B"], pl["B"]),
+        fila("K vecinos más cercanos", cm["knn"], cl["knn"], None, None),
+        fila("Random Forest", cm["rf"], cl["rf"], None, None),
+        fila("Método sencillo: promedio de la especie", cm["B2_media_especie"], cl["B2_media_especie"], pm["prom_especie"], pl["prom_especie"]),
+        fila("Método sencillo: crecimiento del año anterior", cm["B1_crecimiento_hace_12m"], cl["B1_crecimiento_hace_12m"], pm["anio_anterior"], pl["anio_anterior"]),
+    ]
+    out = {"comparacion": comparacion, "especies": ESPS, "base": {k: v for k, v in base.items() if k != "pesos"}, "pesos": base["pesos"], "modelos": {"A": A, "B": B},
            "bandas": {"A": ban, "B": bB}, "rangos": rangos, "historia": hist, "prueba": prueba, "variante_lab": lv}
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
     print("escrito", OUT, round(OUT.stat().st_size / 1024), "KB")

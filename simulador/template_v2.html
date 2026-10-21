@@ -117,6 +117,12 @@ a{color:var(--accent)}
 .tr2 .bar i{position:absolute;top:0;bottom:0;border-radius:3px}
 .tr2 .bar::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--ink3)}
 .tr2 .val{text-align:right;font-variant-numeric:tabular-nums;font-size:12px;line-height:1.35}
+.ico{width:34px;height:34px;object-fit:contain;flex:none}
+.logo{height:19px;width:auto;vertical-align:-5px;margin-right:7px}
+.k .logo{vertical-align:-3px}
+td.num,th.num{text-align:right}
+.cmp th{vertical-align:bottom}
+.cmp tr.sep td{border-top:2px solid var(--line)}
 :root{--mA:#6250d6;--mB:#e0883a}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--mA:#9085e9;--mB:#f0a15a}}
 :root[data-theme="dark"]{--mA:#9085e9;--mB:#f0a15a}
@@ -134,7 +140,10 @@ a{color:var(--accent)}
   <p><b>Modelo A (elegido por la regla de selección):</b> un modelo lineal muy regularizado. En validación cruzada fue el más simple entre los de rendimiento parecido, pero en el examen de enero a junio de 2026 <b>no superó</b> a los métodos sencillos y casi no reacciona a las variables.</p>
   <p><b>Modelo B (Gradient Boosting):</b> el de menor error tanto en validación cruzada como en el examen. Se incorporó <b>después de ver el examen</b>, así que su error real puede ser mayor: se validará con los datos de julio a diciembre de 2026.</p>
   <p>Cada resultado se muestra como rango entre ambos. Los efectos de cada variable son pequeños. El modelo B reacciona sobre todo a los precios de las carnes y, como trabaja con precios reales, también a la inflación; el modelo A casi no reacciona a nada.</p>
-  <div class="tw" style="max-width:560px"><table><thead><tr><th>Error en el examen de 2026 (puntos)</th><th>Mercado</th><th>Laboratorio</th></tr></thead><tbody id="tprueba"></tbody></table></div>
+  <div class="tw"><table class="cmp"><thead>
+    <tr><th rowspan="2">Modelo</th><th class="num" colspan="2">Validación cruzada</th><th class="num" colspan="2">Examen de 2026</th></tr>
+    <tr><th class="num">Mercado</th><th class="num">Laboratorio</th><th class="num">Mercado</th><th class="num">Laboratorio</th></tr></thead><tbody id="tcomp"></tbody></table></div>
+  <p class="note">Error medio en puntos porcentuales de crecimiento (menor es mejor). El examen se consulta una sola vez: solo se evaluaron en él el modelo A, el modelo B y los métodos sencillos. K vecinos y Random Forest se comparan solo en validación cruzada.</p>
 </section>
 
 <div class="layout">
@@ -178,7 +187,7 @@ a{color:var(--accent)}
 
     <section class="panel" aria-label="Sobre los modelos">
       <h2>Sobre los modelos y los valores base</h2>
-      <p class="note" style="font-size:13.5px;color:var(--ink2)">Ambos se entrenaron con ventas mensuales de 2020 a junio de 2026 (crecimiento de 12 meses móviles por especie). Con cinco años de historia los efectos son pequeños y aproximados: úsalo para ver la dirección y el orden de magnitud. El margen de error es el promedio del error en validación cruzada y en el examen. El modelo del Laboratorio usa además el crecimiento del mercado que proyecta el mismo modelo. Los resultados describen asociaciones del pasado, no efectos causales.</p>
+      <p class="note" style="font-size:13.5px;color:var(--ink2)">Ambos se entrenaron con ventas mensuales de 2020 a junio de 2026 (crecimiento de 12 meses móviles por especie). Con cinco años de historia los efectos son pequeños y aproximados: úsalo para ver la dirección y el orden de magnitud. El margen de error es el promedio del error en validación cruzada y en el examen. El modelo del Laboratorio usa además el crecimiento del mercado que proyecta el mismo modelo. Los resultados describen asociaciones del pasado, no efectos causales. Es un análisis interno del equipo del proyecto: el logo solo identifica al Laboratorio y no implica una publicación oficial de la compañía.</p>
       <h3>Valores base de 2027</h3>
       <ul class="src">
         <li>Inflación 5,1%: encuesta de analistas del Banco de la República (diciembre de 2027). El equipo técnico del Banco proyecta 4,3% y el Gobierno 4,8%.</li>
@@ -193,6 +202,7 @@ a{color:var(--accent)}
 
 <script>
 const M = __MODELO__;
+const IMG = __IMAGENES__;
 const ESP = M.especies;
 const NAME = {CA:'Animales de compañía', Cattle:'Bovinos', Poultry:'Aves', Swine:'Cerdos', Total:'Total'};
 const COLOR = {CA:'var(--s1)', Cattle:'var(--s2)', Poultry:'var(--s3)', Swine:'var(--s4)'};
@@ -263,12 +273,12 @@ function avisos(){
 const cardsEl=document.getElementById('cards');
 function renderCards(pa,pb,ba,bb){
   cardsEl.innerHTML=['Total',...ESP].map(e=>{
-    const sw = e==='Total' ? '' : `<span class="sw" style="background:${COLOR[e]}"></span>`;
+    const sw = e==='Total' ? '' : `<img class="ico" src="${IMG[e]}" alt=""><span class="sw" style="background:${COLOR[e]}"></span>`;
     const one=(k,lbl)=>{ const a=pa[e][k], b=pb[e][k], lo=Math.min(a,b), hi=Math.max(a,b);
       const rng = Math.abs(hi-lo)<.0005 ? pc(a) : `${pc(lo)} a ${pc(hi)}`;
       const row=(tag,v,g,b0)=>{ const [c,t]=scen(v), d=(v-b0)*100; return `<div class="mrow"><span class="tag">${tag}</span><b>${pc(v)}</b><span class="pill ${c}">${t}</span></div><div class="mrow" style="margin-top:0"><span class="note">± ${fmt(band(g,k,e)*100)} pts · ${Math.abs(d)<.05?'igual a la base':sg(d)+' pts vs. base'}</span></div>`; };
       return `<div class="m"><div class="k">${lbl}</div><div class="rng">${rng}</div>${row('Modelo A',a,'A',ba[e][k])}${row('Modelo B',b,'B',bb[e][k])}</div>`; };
-    return `<article class="card ${e==='Total'?'total':''}"><h3 class="name">${sw}${NAME[e]}${e==='Total'?' · ponderado por ventas de los últimos 12 meses':''}</h3><div class="metrics">${one('mercado','Mercado')}${one('lab','Laboratorio')}</div></article>`; }).join('');
+    return `<article class="card ${e==='Total'?'total':''}"><h3 class="name">${sw}${NAME[e]}${e==='Total'?' · ponderado por ventas de los últimos 12 meses':''}</h3><div class="metrics">${one('mercado','Mercado')}${one('lab',`<img class="logo" src="${IMG.logo}" alt="Zoetis">Laboratorio`)}</div></article>`; }).join('');
 }
 
 /* ---------- grafico ---------- */
@@ -330,9 +340,9 @@ function renderTornado(pa,pb){
   document.getElementById('chTitle').textContent = `Crecimiento anual ${k==='mercado'?'del mercado':'del laboratorio'} por especie`;
 }
 
-/* ---------- examen ---------- */
-(()=>{ const p=M.prueba, f=(x)=>fmt(x,1); const rows=[['Modelo A (regla de selección)','A'],['Modelo B (Gradient Boosting)','B'],['Método sencillo: promedio de la especie','prom_especie'],['Método sencillo: crecimiento del año anterior','anio_anterior']];
-  document.getElementById('tprueba').innerHTML=rows.map(([n,k])=>`<tr><td>${n}</td><td>${f(p.mercado[k])}</td><td>${f(p.lab[k])}</td></tr>`).join(''); })();
+/* ---------- comparacion de modelos ---------- */
+(()=>{ const f=x=>x==null?'–':fmt(x,1);
+  document.getElementById('tcomp').innerHTML=M.comparacion.map((r,i)=>`<tr class="${i===4?'sep':''}"><td>${r.nombre}</td><td class="num">${f(r.cv_mercado)}</td><td class="num">${f(r.cv_lab)}</td><td class="num">${f(r.ex_mercado)}</td><td class="num">${f(r.ex_lab)}</td></tr>`).join(''); })();
 
 const pBase={A:predict('A',base0),B:predict('B',base0)};
 function update(){ syncControls(); avisos(); const pa=predict('A',S), pb=predict('B',S); renderCards(pa,pb,pBase.A,pBase.B); renderChart(pa,pb); renderTornado(pa,pb); }
