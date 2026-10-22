@@ -30,7 +30,6 @@ Informe Técnico de Mercado Farmacéutico de Salud Animal en Colombia · Zoetis 
 | Crec Mercado Q movil | Fracción (crecimiento 12 meses sobre trimestre móvil) | 1.683 (20,4%) | Vacío al inicio de cada serie |
 | Crec Mercado Año | Fracción (definición no reconciliable) | 1.428 (17,3%) | Definición no reconciliable; no se usa |
 | Fecha | Fecha (dd/mm/aaaa) | 0 (0,0%) |  |
-| Compite Laboraorio | Categórica binaria (SI/NO) | 0 (0,0%) | Se usa para definir el mercado donde compite |
 | Precio Leche | Numérica (COP/litro) | 5.616 (67,9%) | Solo bovinos (faltante por diseño) |
 | Precio Carne Res | Numérica (COP/kg, ganado en pie) | 5.616 (67,9%) | Solo bovinos (por diseño); es el precio del ganado en pie |
 | Precio carne cerdo | Numérica (COP/kg, cerdo en pie) | 7.020 (84,9%) | Solo cerdos (por diseño); es el precio del cerdo en pie |

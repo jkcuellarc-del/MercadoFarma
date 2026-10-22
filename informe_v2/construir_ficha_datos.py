@@ -42,7 +42,7 @@ o = ["# Ficha de datos", "",
 o += [f"| **{a}** | {d} |" for a, d in ficha]
 o += ["", "## Columnas, tipos y faltantes", "",
       "| Columna | Tipo | Faltantes | Observación |", "|---|---|--:|---|"]
-o += [f"| {r['columna']} | {r['tipo']} | {n(r['faltantes'])} ({p(r['pct'])}%) | {notas.get(r['columna'], '')} |" for r in C["ficha"]]
+o += [f"| {r['columna']} | {r['tipo']} | {n(r['faltantes'])} ({p(r['pct'])}%) | {notas.get(r['columna'], '')} |" for r in C["ficha"] if r["columna"] != "Compite Laboraorio"]
 o += ["", "Los faltantes de precios y de población son estructurales: cada precio solo aplica a una especie. No son datos perdidos y no se imputaron.", ""]
 (AQUI / "ficha_datos.md").write_text("\n".join(o), encoding="utf-8")
 print("ok")
