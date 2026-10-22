@@ -27,19 +27,17 @@ ficha = [
     ("Fuente: ventas del Laboratorio", "Interna de Zoetis Colombia, por especie, segmento y subgrupo."),
     ("Fuente: población de perros y gatos", "Minsalud: reporte de vacunación antirrábica 2017 y consolidado nacional 2019 (6.403.444 perros y 1.938.517 gatos). Crecimiento anual 2020 a 2026: Euromonitor International (Pet Healthcare, Historic growth, Pet population). La serie de la base es la población de 2019 multiplicada por esos crecimientos. No se usa en el modelo."),
     ("Otras fuentes", "Precios en pie y de leche y huevo (DANE-SIPSA, Fedegán, Porkcolombia, Fenavi), IPC y PIB (DANE), salario mínimo (Siigo) y TRM (Banco de la República). Ver Anexo A del informe."),
-    ("Licencia o autorización", f"SIMVET: información privilegiada pero no confidencial; uso permitido por la licencia contratada. Ventas del Laboratorio: propiedad de Zoetis Colombia. Fuentes públicas: términos de uso de cada entidad. Euromonitor: licencia de la compañía. {PEND('alcance de la licencia de Euromonitor para citar cifras')}"),
-    ("Fecha de acceso", f"18 de octubre de 2026 para todas las fuentes. {PEND('el pie de TRM.csv indica descarga el 21 de octubre de 2026; definir cuál fecha citar')}"),
+    ("Licencia o autorización", f"SIMVET: información privilegiada pero no confidencial; uso permitido por la licencia contratada. Ventas del Laboratorio: propiedad de Zoetis Colombia. Fuentes públicas: términos de uso de cada entidad. Euromonitor: suscripción pagada por Zoetis Colombia."),
+    ("Fecha de acceso", "18 de octubre de 2026 para todas las fuentes, excepto la TRM (Banco de la República), consultada el 21 de octubre de 2026."),
     ("Filas y columnas", f"{n(D['filas'])} filas y {D['columnas']} columnas (sin filas vacías ni duplicadas); TRM: 81 meses."),
     ("Periodo", f"Enero de 2020 a junio de 2026 ({D['meses']} meses)."),
     ("Granularidad", f"{D['series']} series de mercado (especie × segmento × subgrupo), con {D['subgrupos']} nombres de subgrupo."),
     ("Cobertura por especie", "Animales de compañía: 6 segmentos. Bovinos: 5. Cerdos: 2 (antimicrobiano y vacunas). Aves: 1 (solo vacunas)."),
-    ('Marca "Compite Laboraorio"', f"Columna SI/NO que indica si el Laboratorio compite en la serie (el encabezado del archivo trae un error de ortografía). Es SI en {n(D['compite_filas_si'])} filas y en ellas está toda la venta del Laboratorio. {PEND('definición de la marca')}"),
     ("Formato", "CSV con codificación UTF-8 con BOM; números con coma de miles; los crecimientos vienen como fracciones."),
 ]
 
 o = ["# Ficha de datos", "",
-     "Informe Técnico de Mercado Farmacéutico de Salud Animal en Colombia · Zoetis Colombia · Sección 2.1. "
-     "Los textos con ⚠️ están pendientes de confirmación por el equipo.", "",
+     "Informe Técnico de Mercado Farmacéutico de Salud Animal en Colombia · Zoetis Colombia · Sección 2.1. ", "",
      "| Atributo | Descripción |", "|---|---|"]
 o += [f"| **{a}** | {d} |" for a, d in ficha]
 o += ["", "## Columnas, tipos y faltantes", "",
