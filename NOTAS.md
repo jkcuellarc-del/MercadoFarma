@@ -24,3 +24,10 @@ No ejecutar `python -m src.v2.prueba` otra vez (candado en `reports/v2/prueba_co
 
 ## Informe v2
 `informe_v2/` contiene el informe reconstruido con el protocolo v2 (node informe_v2/construir_informe_v2.js). `informe/` (v1) queda obsoleto. Pendientes: textos amarillos `[[...]]`.
+
+## Comentarios pendientes sobre la presentación (22 oct 2026)
+Presentación: `presentacion/Sustentacion_Proyeccion_2027_Zoetis_Colombia.pptx` (se genera con `presentacion/construir_presentacion.py`). Se revisan más tarde:
+- Diapositiva 4: no decir que el mercado de aves está en descenso.
+- Diapositiva 5: agregar que la idea es predecir si 2027 será un año regular, estable u optimista, y mencionar los rangos (regular < 8 %, estable 8 % a 15 %, optimista > 15 %).
+- Diapositiva 7: no decir que la población de perros y gatos se descartó como variable del modelo.
+- Diapositiva 10: mover el párrafo sobre la partición de los datos en entrenamiento y prueba por año a la parte superior de la tabla, o antes de ella.
