@@ -2,7 +2,7 @@
 
 Todas las fuentes se consultaron el 18 de octubre de 2026, salvo la TRM, cuyo archivo indica descarga el 21 de octubre de 2026. Cobertura: de 2020 a 2026 (junio de 2026 para mercado y ventas).
 
-Banco de la República. (s. f.). Tasa de cambio: Tasa Representativa del Mercado (TRM), fin de mes y promedio mensual [Serie histórica mensual, 2020-2026]. Banco de la República. Recuperado el 21 de octubre de 2026, de [[completar la dirección del sistema de series estadísticas]]
+Banco de la República. (s. f.). Tasa de cambio: Tasa Representativa del Mercado (TRM), fin de mes y promedio mensual [Serie histórica mensual, 2020-2026]. Banco de la República. Recuperado el 21 de octubre de 2026, de https://www.banrep.gov.co/es/estadisticas-economicas/series-estadisticas-historicas-colombia
 
 Departamento Administrativo Nacional de Estadística. (s. f.-a). Boletín mensual: Precios de leche cruda en finca [Series históricas, 2020-2026]. Sistema de Información de Precios y Abastecimiento del Sector Agropecuario (SIPSA). Recuperado el 18 de octubre de 2026, de https://www.dane.gov.co/index.php/estadisticas-por-tema/agropecuario/sistema-de-informacion-de-precios-sipsa/boletin-mensual-precios-de-leche-cruda-en-finca
 
