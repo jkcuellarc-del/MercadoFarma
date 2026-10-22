@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 cuaderno/salida/
 cuaderno/_completo_*.ipynb
+presentacion/u/
+presentacion/r/
+presentacion/plt-*.jpg
+presentacion/plantilla.pptx
+presentacion/simulador*.png
