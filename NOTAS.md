@@ -31,3 +31,5 @@ Presentación: `presentacion/Sustentacion_Proyeccion_2027_Zoetis_Colombia.pptx` 
 - Diapositiva 5: agregar que la idea es predecir si 2027 será un año regular, estable u optimista, y mencionar los rangos (regular < 8 %, estable 8 % a 15 %, optimista > 15 %).
 - Diapositiva 7: no decir que la población de perros y gatos se descartó como variable del modelo.
 - Diapositiva 10: mover el párrafo sobre la partición de los datos en entrenamiento y prueba por año a la parte superior de la tabla, o antes de ella.
+
+**Aplicados el 23 oct 2026:** los cuatro cambios anteriores, imágenes de fondo en la diapositiva 4, y dos diapositivas nuevas antes de la tabla de modelos (aprendizaje supervisado con la Tabla 3 de partición, y variables importantes). La presentación ahora tiene 19 diapositivas.
